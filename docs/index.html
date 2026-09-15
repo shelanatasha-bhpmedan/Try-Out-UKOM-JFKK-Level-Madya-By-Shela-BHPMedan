@@ -1,0 +1,1901 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Anjungan Selaras</title>
+<meta name="description" content="Kalender tim dengan co-pilot AI, kehadiran langsung, dan deteksi bentrok jadwal.">
+<meta name="color-scheme" content="dark light">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%9B%B0%EF%B8%8F%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap">
+<style>
+/* ============================================================
+   ANJUNGAN SELARAS — kalender tim, anjungan kendali malam hari
+   Token gelap didefinisikan di :root (desain dark-first);
+   token terang menimpa lewat media query + [data-theme].
+   ============================================================ */
+:root{
+  --ground:#070B15;
+  --surface:#0E1426;
+  --surface-2:#151D33;
+  --surface-3:#1C2540;
+  --line:#243050;
+  --line-soft:#1A2340;
+  --ink:#E8EDFB;
+  --ink-2:#A8B3D6;
+  --muted:#7683AB;
+  --accent:#FFB147;
+  --accent-ink:#1A1204;
+  --accent-soft:rgba(255,177,71,.14);
+  --signal:#63C2FF;
+  --signal-soft:rgba(99,194,255,.13);
+  --alert:#FF6076;
+  --alert-soft:rgba(255,96,118,.15);
+  --good:#49D6A0;
+  --cat-rapat:#3E9BE0;
+  --cat-lapangan:#BE7F2A;
+  --cat-tenggat:#D14FA0;
+  --cat-fokus:#3E9E5C;
+  --today-wash:rgba(255,177,71,.10);
+  --scan:rgba(99,194,255,.055);
+  --shadow:0 18px 46px -24px rgba(0,0,0,.92);
+  --radius:14px;
+  --f-display:"Chakra Petch","Segoe UI",system-ui,sans-serif;
+  --f-body:"Plus Jakarta Sans","Segoe UI",system-ui,sans-serif;
+  --f-data:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+}
+@media (prefers-color-scheme: light){
+  :root:not([data-theme="dark"]){
+    --ground:#EEF1F8;
+    --surface:#FFFFFF;
+    --surface-2:#F7F8FC;
+    --surface-3:#EBEFF8;
+    --line:#D6DDEC;
+    --line-soft:#E6EAF4;
+    --ink:#111830;
+    --ink-2:#414D6E;
+    --muted:#68749A;
+    --accent:#B4690E;
+    --accent-ink:#FFF8EE;
+    --accent-soft:rgba(180,105,14,.12);
+    --signal:#0E6FB8;
+    --signal-soft:rgba(14,111,184,.10);
+    --alert:#C9344B;
+    --alert-soft:rgba(201,52,75,.11);
+    --good:#0E7A5A;
+    --cat-rapat:#1E7FC2;
+    --cat-lapangan:#9A6410;
+    --cat-tenggat:#B03C82;
+    --cat-fokus:#49A86F;
+    --today-wash:rgba(180,105,14,.09);
+    --scan:rgba(14,111,184,.04);
+    --shadow:0 16px 40px -28px rgba(17,24,48,.45);
+  }
+}
+:root[data-theme="light"]{
+  --ground:#EEF1F8;
+  --surface:#FFFFFF;
+  --surface-2:#F7F8FC;
+  --surface-3:#EBEFF8;
+  --line:#D6DDEC;
+  --line-soft:#E6EAF4;
+  --ink:#111830;
+  --ink-2:#414D6E;
+  --muted:#68749A;
+  --accent:#B4690E;
+  --accent-ink:#FFF8EE;
+  --accent-soft:rgba(180,105,14,.12);
+  --signal:#0E6FB8;
+  --signal-soft:rgba(14,111,184,.10);
+  --alert:#C9344B;
+  --alert-soft:rgba(201,52,75,.11);
+  --good:#0E7A5A;
+  --cat-rapat:#1E7FC2;
+  --cat-lapangan:#9A6410;
+  --cat-tenggat:#B03C82;
+  --cat-fokus:#49A86F;
+  --today-wash:rgba(180,105,14,.09);
+  --scan:rgba(14,111,184,.04);
+  --shadow:0 16px 40px -28px rgba(17,24,48,.45);
+}
+
+*{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0;
+  font-family:var(--f-body);
+  color:var(--ink);
+  background:var(--ground);
+  background-image:
+    radial-gradient(1100px 520px at 12% -12%, var(--signal-soft), transparent 62%),
+    radial-gradient(760px 420px at 96% 4%, var(--accent-soft), transparent 58%),
+    repeating-linear-gradient(0deg, var(--scan) 0 1px, transparent 1px 4px);
+  -webkit-font-smoothing:antialiased;
+}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer;background:none;border:0}
+:focus-visible{outline:2px solid var(--signal);outline-offset:2px;border-radius:6px}
+::selection{background:var(--accent);color:var(--accent-ink)}
+
+.app{min-height:100%;display:flex;flex-direction:column;gap:14px;padding:0 16px 18px;max-width:1680px;margin:0 auto}
+
+/* ---------- anjungan (header) ---------- */
+.deck{
+  position:sticky;top:env(safe-area-inset-top, 0px);z-index:40;
+  display:flex;flex-wrap:wrap;align-items:center;gap:10px 14px;
+  padding:12px 14px;margin:0 -4px;
+  background:color-mix(in srgb, var(--surface) 86%, transparent);
+  backdrop-filter:blur(14px);
+  border:1px solid var(--line);border-radius:0 0 var(--radius) var(--radius);border-top:0;
+  box-shadow:var(--shadow);
+}
+.brand{display:flex;align-items:center;gap:10px;margin-right:4px}
+.mark{width:34px;height:34px;flex:0 0 auto}
+.brand h1{
+  font-family:var(--f-display);font-size:19px;letter-spacing:.06em;
+  text-transform:uppercase;margin:0;line-height:1.05;
+}
+.brand small{display:block;font-family:var(--f-data);font-size:9.5px;letter-spacing:.22em;color:var(--muted);text-transform:uppercase}
+
+.seg{display:flex;gap:2px;padding:3px;background:var(--surface-2);border:1px solid var(--line-soft);border-radius:11px}
+.seg button{
+  padding:7px 13px;border-radius:8px;font-size:12.5px;font-weight:600;color:var(--ink-2);
+  font-family:var(--f-display);letter-spacing:.05em;text-transform:uppercase;transition:background .18s,color .18s;
+}
+.seg button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink)}
+.seg button:hover:not([aria-pressed="true"]){background:var(--surface-3);color:var(--ink)}
+
+.nav{display:flex;align-items:center;gap:6px}
+.icon-btn{
+  width:34px;height:34px;display:grid;place-items:center;border-radius:10px;
+  border:1px solid var(--line);background:var(--surface-2);color:var(--ink-2);transition:.18s;
+}
+.icon-btn:hover{color:var(--ink);border-color:var(--signal);background:var(--surface-3)}
+.period{
+  font-family:var(--f-display);font-size:15px;font-weight:600;letter-spacing:.04em;
+  min-width:172px;text-align:center;text-transform:capitalize;
+}
+.ghost-btn{
+  padding:7px 12px;border-radius:10px;border:1px solid var(--line);background:var(--surface-2);
+  font-size:12.5px;font-weight:600;color:var(--ink-2);transition:.18s;white-space:nowrap;
+}
+.ghost-btn:hover{color:var(--ink);border-color:var(--signal)}
+.primary-btn{
+  padding:9px 15px;border-radius:11px;background:var(--accent);color:var(--accent-ink);
+  font-weight:700;font-size:13px;letter-spacing:.02em;transition:.18s;white-space:nowrap;
+  box-shadow:0 8px 22px -14px var(--accent);
+}
+.primary-btn:hover{filter:brightness(1.07)}
+.spacer{flex:1 1 auto;min-width:0}
+
+/* ---------- kehadiran ---------- */
+.presence{display:flex;align-items:center;gap:8px}
+.stack{display:flex}
+.stack .av{margin-left:-8px}
+.stack .av:first-child{margin-left:0}
+.av{
+  width:30px;height:30px;border-radius:50%;display:grid;place-items:center;
+  font-family:var(--f-display);font-size:12px;font-weight:700;color:#0B0F1C;
+  border:2px solid var(--surface);position:relative;flex:0 0 auto;
+}
+.av.me::after{
+  content:"";position:absolute;inset:-5px;border-radius:50%;border:1.5px dashed var(--accent);
+  animation:spin 9s linear infinite;
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+.live-dot{width:7px;height:7px;border-radius:50%;background:var(--good);box-shadow:0 0 0 0 var(--good);animation:ping 2.4s ease-out infinite}
+@keyframes ping{70%{box-shadow:0 0 0 7px transparent}100%{box-shadow:0 0 0 0 transparent}}
+.live-label{font-family:var(--f-data);font-size:10px;letter-spacing:.16em;color:var(--muted);text-transform:uppercase}
+
+/* ---------- panggung ---------- */
+.stage{display:grid;grid-template-columns:minmax(0,1fr) 372px;gap:14px;align-items:start}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow)}
+.canvas{position:relative;overflow:hidden}
+
+/* filter bar */
+.filters{display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:11px 13px;border-bottom:1px solid var(--line-soft)}
+.field{
+  display:flex;align-items:center;gap:7px;padding:6px 10px;border-radius:10px;
+  background:var(--surface-2);border:1px solid var(--line-soft);
+}
+.field input,.field select{background:none;border:0;outline:none;font-size:12.5px;min-width:0}
+.field input{width:158px}
+.field label{font-family:var(--f-data);font-size:9.5px;letter-spacing:.14em;color:var(--muted);text-transform:uppercase}
+.chip-cat{
+  display:inline-flex;align-items:center;gap:6px;padding:5px 10px;border-radius:999px;
+  border:1px solid var(--line);font-size:11.5px;font-weight:600;color:var(--ink-2);background:var(--surface-2);
+}
+.chip-cat[aria-pressed="true"]{color:var(--ink);border-color:currentColor}
+.dot{width:8px;height:8px;border-radius:2px;flex:0 0 auto}
+
+/* ---------- tampilan bulan ---------- */
+.dow{display:grid;grid-template-columns:repeat(7,1fr);border-bottom:1px solid var(--line-soft)}
+.dow span{
+  padding:8px 10px;font-family:var(--f-data);font-size:9.5px;letter-spacing:.2em;
+  color:var(--muted);text-transform:uppercase;
+}
+.month{display:grid;grid-template-columns:repeat(7,1fr);gap:1px;background:var(--line-soft)}
+.cell{
+  background:var(--surface);min-height:116px;min-width:0;padding:7px 7px 9px;display:flex;flex-direction:column;gap:5px;
+  position:relative;transition:background .2s;
+}
+.cell:hover{background:var(--surface-2)}
+.cell.out{background:var(--surface-2);opacity:.55}
+.cell.today{background:linear-gradient(180deg,var(--today-wash),transparent 60%)}
+.cell.today .daynum{background:var(--accent);color:var(--accent-ink);border-radius:8px}
+.cell-head{display:flex;align-items:center;justify-content:space-between;gap:6px}
+.daynum{
+  font-family:var(--f-data);font-size:12px;font-weight:700;min-width:24px;height:22px;
+  display:grid;place-items:center;color:var(--ink-2);
+}
+.addhere{opacity:0;font-size:16px;line-height:1;color:var(--muted);padding:0 4px;transition:.15s}
+.cell:hover .addhere,.addhere:focus-visible{opacity:1;color:var(--accent)}
+.ev{
+  display:flex;align-items:center;gap:6px;padding:4px 7px;border-radius:7px;text-align:left;width:100%;min-width:0;
+  background:var(--surface-2);border:1px solid var(--line-soft);border-left:3px solid var(--cat);
+  font-size:11.5px;line-height:1.25;transition:.15s;
+}
+.ev:hover{border-color:var(--cat);transform:translateX(1px)}
+.ev .t{font-family:var(--f-data);font-size:10px;color:var(--muted);flex:0 0 auto}
+.ev .n{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600;min-width:0;flex:1 1 auto}
+.ev.clash{border-color:var(--alert);background:var(--alert-soft)}
+.ev.sel{outline:2px solid var(--signal);outline-offset:1px}
+.more{font-family:var(--f-data);font-size:10px;color:var(--muted);padding-left:3px;text-align:left}
+.peer-ring{position:absolute;inset:2px;border-radius:9px;border:1.5px solid var(--pc);pointer-events:none;opacity:.85}
+.peer-ring span{
+  position:absolute;top:-9px;right:4px;font-family:var(--f-data);font-size:8.5px;letter-spacing:.08em;
+  background:var(--pc);color:#0B0F1C;padding:1px 5px;border-radius:5px;white-space:nowrap;
+}
+
+/* ---------- tampilan minggu ---------- */
+.week-wrap{overflow-x:auto}
+.week{min-width:640px;display:grid;grid-template-columns:52px repeat(7,minmax(0,1fr));gap:1px;background:var(--line-soft)}
+.wh{background:var(--surface);padding:8px 6px;text-align:center;min-width:0}
+.slot,.hour{min-width:0}
+.wh b{display:block;font-family:var(--f-display);font-size:14px;letter-spacing:.03em}
+.wh small{font-family:var(--f-data);font-size:9.5px;letter-spacing:.14em;color:var(--muted);text-transform:uppercase}
+.wh.today b{color:var(--accent)}
+.hour{background:var(--surface);font-family:var(--f-data);font-size:9.5px;color:var(--muted);padding:3px 5px;text-align:right;height:44px}
+.slot{background:var(--surface);height:44px;position:relative;padding:2px;transition:background .18s}
+.slot:hover{background:var(--surface-2)}
+.wev{
+  position:absolute;left:2px;right:2px;border-radius:7px;padding:4px 6px;overflow:hidden;text-align:left;
+  background:color-mix(in srgb, var(--cat) 20%, var(--surface));
+  border:1px solid var(--cat);border-left-width:3px;font-size:11px;line-height:1.2;z-index:2;
+}
+.wev b{display:block;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.wev small{font-family:var(--f-data);font-size:9.5px;color:var(--ink-2)}
+.wev.clash{border-color:var(--alert);box-shadow:0 0 0 1px var(--alert)}
+.now-line{position:absolute;left:0;right:0;height:2px;background:var(--alert);z-index:3;pointer-events:none}
+.now-line::before{content:"";position:absolute;left:-4px;top:-3px;width:8px;height:8px;border-radius:50%;background:var(--alert)}
+
+/* ---------- agenda ---------- */
+.agenda{padding:6px 0 10px;max-height:min(70vh,740px);overflow-y:auto}
+.ag-day{display:grid;grid-template-columns:78px minmax(0,1fr);gap:12px;padding:10px 14px;border-bottom:1px solid var(--line-soft)}
+.ag-day:last-child{border-bottom:0}
+.ag-date{font-family:var(--f-data);font-size:11px;color:var(--muted);line-height:1.5;text-transform:uppercase;letter-spacing:.08em}
+.ag-date b{display:block;font-family:var(--f-display);font-size:26px;color:var(--ink);letter-spacing:0}
+.ag-date.today b{color:var(--accent)}
+.ag-list{display:flex;flex-direction:column;gap:7px;min-width:0}
+.ag-item{
+  display:grid;grid-template-columns:58px minmax(0,1fr);gap:11px;align-items:start;text-align:left;
+  padding:9px 11px;border-radius:11px;background:var(--surface-2);border:1px solid var(--line-soft);
+  border-left:3px solid var(--cat);transition:.16s;
+}
+.ag-item:hover{border-color:var(--cat);background:var(--surface-3)}
+.ag-item .time{font-family:var(--f-data);font-size:11px;color:var(--ink-2);line-height:1.5;font-variant-numeric:tabular-nums}
+.ag-item .title{font-weight:700;font-size:13.5px;margin-bottom:3px}
+.ag-item .meta{font-size:11.5px;color:var(--muted);display:flex;flex-wrap:wrap;gap:4px 10px}
+.empty{padding:40px 22px;text-align:center;color:var(--muted);display:flex;flex-direction:column;gap:12px;align-items:center}
+.empty h3{font-family:var(--f-display);color:var(--ink);margin:0;font-size:17px;letter-spacing:.04em}
+
+/* ---------- rel samping ---------- */
+.rail{display:flex;flex-direction:column;gap:12px;min-width:0}
+.rail-tabs{display:flex;gap:2px;padding:3px;background:var(--surface-2);border:1px solid var(--line-soft);border-radius:11px}
+.rail-tabs button{flex:1;padding:8px 6px;border-radius:8px;font-size:12px;font-weight:600;color:var(--ink-2);font-family:var(--f-display);letter-spacing:.05em;text-transform:uppercase}
+.rail-tabs button[aria-pressed="true"]{background:var(--signal);color:var(--surface)}
+.pane{padding:13px}
+.pane h2{
+  font-family:var(--f-display);font-size:12px;letter-spacing:.18em;text-transform:uppercase;
+  color:var(--muted);margin:0 0 10px;display:flex;align-items:center;gap:8px;
+}
+.pane h2::after{content:"";flex:1;height:1px;background:var(--line-soft)}
+
+/* co-pilot */
+.ai-acts{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:11px}
+.ai-act{
+  padding:9px 10px;border-radius:11px;border:1px solid var(--line);background:var(--surface-2);
+  text-align:left;font-size:12px;font-weight:600;line-height:1.3;transition:.16s;
+}
+.ai-act:hover{border-color:var(--signal);background:var(--surface-3)}
+.ai-act small{display:block;font-weight:500;color:var(--muted);font-size:10.5px;margin-top:2px}
+.ai-act[disabled]{opacity:.45;cursor:not-allowed}
+.console{
+  background:var(--surface-2);border:1px solid var(--line-soft);border-radius:12px;
+  padding:11px;min-height:150px;max-height:330px;overflow-y:auto;display:flex;flex-direction:column;gap:10px;
+}
+.msg{font-size:12.5px;line-height:1.55}
+.msg .who{
+  font-family:var(--f-data);font-size:9.5px;letter-spacing:.16em;text-transform:uppercase;
+  color:var(--muted);display:block;margin-bottom:3px;
+}
+.msg.ai .who{color:var(--signal)}
+.msg.ai .body{white-space:pre-wrap;color:var(--ink)}
+.msg.you .body{color:var(--ink-2);background:var(--surface-3);padding:7px 9px;border-radius:9px}
+.msg .body strong{color:var(--accent)}
+.thinking{display:inline-flex;gap:3px;align-items:center;color:var(--signal);font-family:var(--f-data);font-size:11px}
+.thinking i{width:4px;height:4px;border-radius:50%;background:currentColor;animation:bob 1s infinite}
+.thinking i:nth-child(2){animation-delay:.15s}.thinking i:nth-child(3){animation-delay:.3s}
+@keyframes bob{0%,100%{opacity:.25;transform:translateY(0)}50%{opacity:1;transform:translateY(-3px)}}
+.slot-card{
+  display:block;width:100%;text-align:left;padding:9px 10px;border-radius:10px;margin-top:6px;
+  background:var(--surface-3);border:1px solid var(--line);font-size:12px;transition:.16s;
+}
+.slot-card:hover{border-color:var(--good)}
+.slot-card b{font-family:var(--f-data);font-size:12px;color:var(--good);display:block}
+.ask{display:flex;gap:7px;margin-top:11px}
+.ask textarea{
+  flex:1;resize:none;background:var(--surface-2);border:1px solid var(--line);border-radius:11px;
+  padding:9px 11px;font-size:12.5px;line-height:1.4;min-height:42px;max-height:120px;outline:none;
+}
+.ask textarea:focus{border-color:var(--signal)}
+.send{width:42px;border-radius:11px;background:var(--signal);color:#04121F;display:grid;place-items:center;flex:0 0 auto}
+.ai-off{font-size:12px;color:var(--muted);line-height:1.5;padding:10px;background:var(--surface-2);border-radius:11px;border:1px dashed var(--line)}
+
+/* tim */
+.member{display:flex;align-items:center;gap:10px;padding:8px 6px;border-bottom:1px solid var(--line-soft)}
+.member:last-of-type{border-bottom:0}
+.member .nm{font-weight:600;font-size:13px}
+.member .st{font-family:var(--f-data);font-size:10px;color:var(--muted);letter-spacing:.06em}
+.member .st.on{color:var(--good)}
+.chat{display:flex;flex-direction:column;gap:9px;max-height:260px;overflow-y:auto;padding:4px 2px}
+.bubble{font-size:12.5px;line-height:1.5}
+.bubble .who{font-weight:700;font-size:11.5px}
+.bubble .at{font-family:var(--f-data);font-size:9.5px;color:var(--muted);margin-left:6px}
+.bubble .tx{color:var(--ink-2);word-break:break-word}
+
+/* beban kerja */
+.bars{display:flex;flex-direction:column;gap:11px;margin-top:4px}
+.bar-row{display:grid;grid-template-columns:minmax(66px,84px) minmax(0,1fr) 52px;gap:9px;align-items:center}
+.bar-row .nm{font-size:12px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.track{height:10px;border-radius:5px;background:var(--surface-3);overflow:hidden}
+.fill{height:100%;border-radius:0 4px 4px 0;background:var(--signal);transition:width .5s cubic-bezier(.2,.8,.2,1)}
+.fill.hot{background:var(--alert)}
+.bar-row .val{font-family:var(--f-data);font-size:11px;color:var(--ink-2);text-align:right;font-variant-numeric:tabular-nums}
+.stat-row{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px}
+.stat{background:var(--surface-2);border:1px solid var(--line-soft);border-radius:11px;padding:9px 10px}
+.stat b{display:block;font-family:var(--f-display);font-size:22px;line-height:1.1}
+.stat small{font-family:var(--f-data);font-size:9.5px;letter-spacing:.12em;color:var(--muted);text-transform:uppercase}
+.clash-item{
+  display:block;width:100%;text-align:left;padding:9px 10px;border-radius:10px;margin-bottom:7px;
+  background:var(--alert-soft);border:1px solid var(--alert);font-size:12px;line-height:1.45;
+}
+.clash-item b{display:block;font-size:12.5px}
+.ok-note{font-size:12.5px;color:var(--muted);padding:9px 10px;border-radius:10px;background:var(--surface-2);border:1px solid var(--line-soft)}
+
+/* ---------- kursor rekan ---------- */
+#cursors{position:absolute;inset:0;pointer-events:none;z-index:30;overflow:hidden}
+.cur{position:absolute;transform:translate(-2px,-2px);transition:left .09s linear,top .09s linear}
+.cur svg{display:block;filter:drop-shadow(0 2px 4px rgba(0,0,0,.45))}
+.cur span{
+  display:inline-block;margin-left:10px;padding:2px 7px;border-radius:7px;font-size:10.5px;font-weight:700;
+  color:#0B0F1C;white-space:nowrap;transform:translateY(-4px);
+}
+
+/* ---------- modal & gerbang ---------- */
+.veil{
+  position:fixed;inset:0;z-index:80;display:grid;place-items:center;padding:18px;
+  background:color-mix(in srgb, var(--ground) 78%, transparent);backdrop-filter:blur(6px);
+}
+.sheet{
+  width:min(560px,100%);max-height:88vh;overflow-y:auto;background:var(--surface);
+  border:1px solid var(--line);border-radius:18px;box-shadow:var(--shadow);padding:18px;
+}
+.sheet h3{font-family:var(--f-display);font-size:17px;letter-spacing:.05em;margin:0 0 3px;text-transform:uppercase}
+.sheet p.sub{margin:0 0 15px;color:var(--muted);font-size:12.5px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.inp{display:flex;flex-direction:column;gap:5px;margin-bottom:10px;min-width:0}
+.inp label{font-family:var(--f-data);font-size:9.5px;letter-spacing:.16em;color:var(--muted);text-transform:uppercase}
+.inp input,.inp select,.inp textarea{
+  background:var(--surface-2);border:1px solid var(--line);border-radius:10px;padding:9px 11px;
+  font-size:13px;outline:none;width:100%;
+}
+.inp textarea{resize:vertical;min-height:70px;line-height:1.5}
+.inp input:focus,.inp select:focus,.inp textarea:focus{border-color:var(--signal)}
+.pick{display:flex;flex-wrap:wrap;gap:6px}
+.pick button{
+  padding:6px 11px;border-radius:999px;border:1px solid var(--line);background:var(--surface-2);
+  font-size:12px;font-weight:600;color:var(--ink-2);display:inline-flex;align-items:center;gap:6px;
+}
+.pick button[aria-pressed="true"]{border-color:currentColor;color:var(--ink);background:var(--surface-3)}
+.sheet-foot{display:flex;gap:9px;justify-content:flex-end;margin-top:15px;flex-wrap:wrap}
+.danger-btn{padding:9px 14px;border-radius:11px;border:1px solid var(--alert);color:var(--alert);font-weight:600;font-size:12.5px;margin-right:auto}
+.danger-btn:hover{background:var(--alert-soft)}
+
+/* ---------- toast ---------- */
+#toasts{position:fixed;left:50%;bottom:calc(16px + env(safe-area-inset-bottom, 0px));transform:translateX(-50%);z-index:95;display:flex;flex-direction:column;gap:8px;align-items:center;pointer-events:none}
+.toast{
+  background:var(--surface-3);border:1px solid var(--line);color:var(--ink);padding:9px 15px;border-radius:999px;
+  font-size:12.5px;font-weight:600;box-shadow:var(--shadow);animation:rise .3s cubic-bezier(.2,.8,.2,1);
+}
+.toast.sig{border-color:var(--signal);color:var(--signal)}
+@keyframes rise{from{opacity:0;transform:translateY(10px)}}
+.pulse-ring{
+  position:fixed;left:50%;top:50%;width:10px;height:10px;border-radius:50%;pointer-events:none;z-index:70;
+  border:2px solid var(--accent);transform:translate(-50%,-50%);animation:burst 1.1s ease-out forwards;
+}
+@keyframes burst{to{width:min(90vw,760px);height:min(90vw,760px);opacity:0;border-width:1px}}
+
+@media (prefers-reduced-motion: reduce){
+  *{animation-duration:.001ms !important;animation-iteration-count:1 !important;transition-duration:.001ms !important}
+}
+
+/* ---------- responsif ---------- */
+@media (max-width:1080px){
+  .stage{grid-template-columns:minmax(0,1fr)}
+  .rail{order:2}
+  .period{min-width:auto}
+}
+@media (max-width:620px){
+  .app{padding:0 12px 16px}
+  .deck{gap:7px;padding:9px 9px}
+  .brand small{display:none}
+  .brand{gap:8px;margin-right:0}
+  .mark{width:27px;height:27px}
+  .brand h1{font-size:15px}
+  .seg{padding:2px}
+  .seg button{padding:6px 9px;font-size:11px}
+  .ghost-btn{padding:6px 9px;font-size:11.5px}
+  .primary-btn{padding:7px 11px;font-size:12px}
+  .icon-btn{width:30px;height:30px}
+  .live-label{display:none}
+  .period{font-size:13.5px}
+  .av{width:26px;height:26px;font-size:11px}
+  .cell{min-height:82px;padding:5px 4px}
+  .ev .t{display:none}
+  .ev{padding:3px 5px;font-size:10.5px}
+  .dow span{padding:6px 5px;font-size:8.5px;letter-spacing:.1em}
+  .ai-acts{grid-template-columns:1fr}
+  .grid2{grid-template-columns:1fr}
+  .field input{width:120px}
+  .ag-day{grid-template-columns:60px minmax(0,1fr);gap:9px;padding:9px 10px}
+}
+.room-chip{display:inline-flex;align-items:center;gap:7px;font-family:var(--f-data);font-size:11px;letter-spacing:.06em}
+.room-chip .dot{width:8px;height:8px;border-radius:50%;flex:0 0 auto}
+noscript p{padding:20px;text-align:center;color:var(--ink)}
+</style>
+</head>
+<body>
+<noscript><p>Halaman ini butuh JavaScript untuk menampilkan kalender tim.</p></noscript>
+<div class="app">
+  <header class="deck">
+    <div class="brand">
+      <svg class="mark" viewBox="0 0 40 40" aria-hidden="true">
+        <circle cx="20" cy="20" r="18" fill="none" stroke="var(--line)" stroke-width="1.4"/>
+        <circle cx="20" cy="20" r="12" fill="none" stroke="var(--signal)" stroke-width="1.2" opacity=".65"/>
+        <circle cx="20" cy="20" r="5.4" fill="var(--accent)"/>
+        <circle cx="20" cy="2" r="2.6" fill="var(--signal)"/>
+        <path d="M2 20h6M32 20h6M20 32v6" stroke="var(--line)" stroke-width="1.4" stroke-linecap="round"/>
+      </svg>
+      <div>
+        <h1>Anjungan&nbsp;Selaras</h1>
+        <small id="deck-sub">kalender tim · realtime</small>
+      </div>
+    </div>
+
+    <div class="seg" role="group" aria-label="Tampilan kalender">
+      <button type="button" id="v-bulan" data-view="bulan" aria-pressed="true">Bulan</button>
+      <button type="button" id="v-minggu" data-view="minggu" aria-pressed="false">Minggu</button>
+      <button type="button" id="v-agenda" data-view="agenda" aria-pressed="false">Agenda</button>
+    </div>
+
+    <div class="nav">
+      <button type="button" class="icon-btn" id="prev" aria-label="Periode sebelumnya">‹</button>
+      <span class="period" id="period">—</span>
+      <button type="button" class="icon-btn" id="next" aria-label="Periode berikutnya">›</button>
+      <button type="button" class="ghost-btn" id="today">Hari ini</button>
+    </div>
+
+    <span class="spacer"></span>
+
+    <div class="presence">
+      <span class="live-dot" aria-hidden="true"></span>
+      <span class="live-label" id="live-count">1 online</span>
+      <div class="stack" id="avatars"></div>
+      <button type="button" class="icon-btn" id="pulse" title="Kirim sinyal ke semua yang sedang membuka" aria-label="Kirim sinyal">◎</button>
+    </div>
+
+    <button type="button" class="ghost-btn room-chip" id="room-chip"><i class="dot" style="background:var(--muted)"></i><span>Mode lokal</span></button>
+    <button type="button" class="ghost-btn" id="me-btn">Atur nama</button>
+    <button type="button" class="icon-btn" id="theme" aria-label="Ganti tema terang/gelap">◐</button>
+    <button type="button" class="ghost-btn" id="export">Ekspor</button>
+    <button type="button" class="primary-btn" id="new-ev">+ Acara</button>
+  </header>
+
+  <div class="stage">
+    <section class="panel canvas">
+      <div class="filters">
+        <div class="field">
+          <label for="q">Cari</label>
+          <input id="q" type="search" placeholder="judul, peserta, catatan…" autocomplete="off">
+        </div>
+        <div class="field">
+          <label for="f-member">Anggota</label>
+          <select id="f-member"><option value="all">Semua</option></select>
+        </div>
+        <button type="button" class="chip-cat" data-cat="rapat" aria-pressed="true"><i class="dot" style="background:var(--cat-rapat)"></i>Rapat</button>
+        <button type="button" class="chip-cat" data-cat="lapangan" aria-pressed="true"><i class="dot" style="background:var(--cat-lapangan)"></i>Lapangan</button>
+        <button type="button" class="chip-cat" data-cat="tenggat" aria-pressed="true"><i class="dot" style="background:var(--cat-tenggat)"></i>Tenggat</button>
+        <button type="button" class="chip-cat" data-cat="fokus" aria-pressed="true"><i class="dot" style="background:var(--cat-fokus)"></i>Fokus</button>
+      </div>
+      <div id="view"></div>
+      <div id="cursors"></div>
+    </section>
+
+    <aside class="rail">
+      <div class="rail-tabs" role="group" aria-label="Panel samping">
+        <button type="button" data-rail="ai" aria-pressed="true">Co-pilot</button>
+        <button type="button" data-rail="tim" aria-pressed="false">Tim</button>
+        <button type="button" data-rail="beban" aria-pressed="false">Beban</button>
+      </div>
+      <div class="panel pane" id="rail-body"></div>
+    </aside>
+  </div>
+</div>
+
+<div id="toasts"></div>
+
+
+<div id="toasts"></div>
+
+<script src="vendor/mqtt.min.js"></script>
+<script>
+
+/* ============================================================
+   1. Dasar: waktu, kategori, util
+   ============================================================ */
+const HARI = ["Minggu","Senin","Selasa","Rabu","Kamis","Jumat","Sabtu"];
+const HARI_PENDEK = ["Min","Sen","Sel","Rab","Kam","Jum","Sab"];
+const BULAN = ["Januari","Februari","Maret","April","Mei","Juni","Juli","Agustus","September","Oktober","November","Desember"];
+const KATEGORI = {
+  rapat:    {label:"Rapat",    ikon:"◆", warna:"var(--cat-rapat)"},
+  lapangan: {label:"Lapangan", ikon:"▲", warna:"var(--cat-lapangan)"},
+  tenggat:  {label:"Tenggat",  ikon:"■", warna:"var(--cat-tenggat)"},
+  fokus:    {label:"Fokus",    ikon:"●", warna:"var(--cat-fokus)"}
+};
+const WARNA_ANGGOTA = ["#63C2FF","#FFB147","#7BE0B4","#FF8FC5","#B9A6FF","#7FD4E8","#FFD166","#9CE37D"];
+
+const pad = n => String(n).padStart(2,"0");
+const iso = d => d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate());
+const fromIso = s => { const [y,m,d] = s.split("-").map(Number); return new Date(y, m-1, d); };
+const addDays = (d,n) => { const x = new Date(d); x.setDate(x.getDate()+n); return x; };
+const startOfWeek = d => addDays(d, -d.getDay());
+const toMin = t => { const [h,m] = String(t||"00:00").split(":").map(Number); return (h||0)*60 + (m||0); };
+const fromMin = m => pad(Math.floor(m/60)%24)+":"+pad(m%60);
+const esc = s => String(s==null?"":s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const uid = p => p+"_"+Math.random().toString(36).slice(2,9)+Date.now().toString(36).slice(-4);
+const tanggalPanjang = s => { const d = fromIso(s); return HARI[d.getDay()]+", "+d.getDate()+" "+BULAN[d.getMonth()]+" "+d.getFullYear(); };
+const warnaDari = nama => WARNA_ANGGOTA[[...String(nama)].reduce((a,c)=>a+c.charCodeAt(0),0) % WARNA_ANGGOTA.length];
+const inisial = nama => String(nama||"?").trim().split(/\s+/).slice(0,2).map(w=>w[0]).join("").toUpperCase();
+
+function simpanLokal(k,v){ try{ localStorage.setItem(k, JSON.stringify(v)); }catch(e){} }
+function bacaLokal(k,def){ try{ const r = localStorage.getItem(k); return r ? JSON.parse(r) : def; }catch(e){ return def; } }
+
+/* ============================================================
+   2. State
+   ============================================================ */
+const HARI_INI = iso(new Date());
+const state = {
+  view: "bulan",
+  anchor: new Date(),
+  events: [],
+  chat: [],
+  roster: {},
+  peers: [],
+  pilih: null,
+  filterCat: {rapat:true, lapangan:true, tenggat:true, fokus:true},
+  filterMember: "all",
+  q: "",
+  rail: "ai",
+  aiTurns: [],
+  mode: "lokal",
+  saya: bacaLokal("selaras.saya", null)
+};
+if (!state.saya) {
+  state.saya = { id: uid("u"), nama: "", warna: WARNA_ANGGOTA[Math.floor(Math.random()*WARNA_ANGGOTA.length)] };
+}
+
+/* Jadwal contoh — hanya dipakai sebelum ruang bersama tersambung,
+   supaya halaman langsung terbaca sebagai aplikasi yang hidup. */
+function jadwalContoh(){
+  const sen = startOfWeek(new Date());
+  const h = n => iso(addDays(sen,n));
+  return [
+    {id:"contoh_1", title:"Rapat koordinasi mingguan", date:h(1), start:"09:00", end:"10:30", cat:"rapat", attendees:["Shela","Rani","Dimas"], notes:"Tinjau progres berkas dan pembagian tugas pekan ini.", priority:"tinggi", owner:"Shela", contoh:true},
+    {id:"contoh_2", title:"Kunjungan berkas ke arsip", date:h(2), start:"13:00", end:"16:00", cat:"lapangan", attendees:["Dimas"], notes:"Bawa daftar nomor registrasi.", priority:"normal", owner:"Dimas", contoh:true},
+    {id:"contoh_3", title:"Tenggat laporan bulanan", date:h(3), start:"16:00", end:"17:00", cat:"tenggat", attendees:["Shela","Rani"], notes:"Kirim ke pimpinan sebelum pukul 17.00.", priority:"tinggi", owner:"Rani", contoh:true},
+    {id:"contoh_4", title:"Blok fokus: penyusunan draf", date:h(3), start:"09:00", end:"11:30", cat:"fokus", attendees:["Rani"], notes:"", priority:"normal", owner:"Rani", contoh:true},
+    {id:"contoh_5", title:"Rapat evaluasi tim", date:h(4), start:"14:00", end:"15:30", cat:"rapat", attendees:["Shela","Rani","Dimas"], notes:"Evaluasi capaian dan hambatan.", priority:"normal", owner:"Shela", contoh:true}
+  ];
+}
+/* Data awal dimuat dari penyimpanan perangkat di bagian 11. */
+
+/* ============================================================
+   3. Ruang tim: penyimpanan lokal + relay publik terenkripsi
+
+   Semua acara dan obrolan disimpan di perangkat. Bila sebuah
+   "kode ruang" diisi, isi kalender juga disiarkan lewat relay
+   MQTT publik — tetapi disegel lebih dulu dengan AES-GCM yang
+   kuncinya diturunkan dari kode ruang itu sendiri, sehingga
+   relay hanya melihat sandi acak.
+   ============================================================ */
+const RELAY = [
+  {nama:"EMQX",      url:"wss://broker.emqx.io:8084/mqtt"},
+  {nama:"Mosquitto", url:"wss://test.mosquitto.org:8081/mqtt"}
+];
+const BATAS_HADIR = 13000;     // rekan dianggap pergi setelah sekian milidetik hening
+
+const store = { events:{}, chat:[] };   // events: peta id → acara (termasuk nisan hapus)
+const hadir = {};                        // id rekan → objek kehadiran
+const net = {
+  id: uid("p"), room:null, topik:null, kunci:null, klien:null,
+  aktif:false, status:"lokal", percobaan:0, antre:0, salamPisah:null, milik:{}
+};
+
+/* ---- penyandian ---- */
+const adaKripto = () => !!(window.crypto && crypto.subtle && crypto.getRandomValues);
+function keB64(buf){
+  const b = new Uint8Array(buf); let s = "";
+  for (let i = 0; i < b.length; i += 0x8000) s += String.fromCharCode.apply(null, b.subarray(i, i+0x8000));
+  return btoa(s);
+}
+function dariB64(t){ const s = atob(t), b = new Uint8Array(s.length); for (let i=0;i<s.length;i++) b[i]=s.charCodeAt(i); return b; }
+
+async function turunkanKunci(room){
+  const enc = new TextEncoder();
+  const dasar = await crypto.subtle.importKey("raw", enc.encode(room), "PBKDF2", false, ["deriveKey"]);
+  return crypto.subtle.deriveKey(
+    {name:"PBKDF2", salt: enc.encode("anjungan-selaras-v1"), iterations:150000, hash:"SHA-256"},
+    dasar, {name:"AES-GCM", length:256}, false, ["encrypt","decrypt"]);
+}
+async function hitungTopik(room){
+  const h = await crypto.subtle.digest("SHA-256", new TextEncoder().encode("topik:"+room));
+  return "anjungan-selaras/" + [...new Uint8Array(h)].slice(0,10).map(b => b.toString(16).padStart(2,"0")).join("");
+}
+async function segel(obj){
+  if (!net.kunci) return null;
+  try{
+    const iv = crypto.getRandomValues(new Uint8Array(12));
+    const data = new TextEncoder().encode(JSON.stringify(obj));
+    const sandi = await crypto.subtle.encrypt({name:"AES-GCM", iv}, net.kunci, data);
+    const gabung = new Uint8Array(iv.length + sandi.byteLength);
+    gabung.set(iv, 0); gabung.set(new Uint8Array(sandi), iv.length);
+    return keB64(gabung);
+  }catch(e){ return null; }
+}
+async function buka(teks){
+  if (!net.kunci) return null;
+  try{
+    const b = dariB64(teks);
+    const polos = await crypto.subtle.decrypt({name:"AES-GCM", iv: b.slice(0,12)}, net.kunci, b.slice(12));
+    return JSON.parse(new TextDecoder().decode(polos));
+  }catch(e){ return null; }
+}
+
+/* ---- penyimpanan perangkat ---- */
+const kunciSimpanan = () => "selaras.data." + (net.room || "lokal");
+function simpanData(){ simpanLokal(kunciSimpanan(), {events: store.events, chat: store.chat}); }
+function muatData(){
+  const d = bacaLokal(kunciSimpanan(), null);
+  store.events = (d && d.events) ? d.events : {};
+  store.chat = (d && Array.isArray(d.chat)) ? d.chat : [];
+  buangNisanLama();
+  terapkan();
+}
+function buangNisanLama(){
+  const batas = Date.now() - 30*24*3600*1000;
+  Object.keys(store.events).forEach(id => {
+    const e = store.events[id];
+    if (e && e.deleted && (e.updatedAt||0) < batas) delete store.events[id];
+  });
+}
+/* Satu sumber kebenaran: peta store → daftar yang dipakai penggambar. */
+function terapkan(){
+  state.events = Object.values(store.events).filter(e => e && !e.deleted);
+  state.chat = store.chat;
+  gambar(); gambarRail(); isiFilterAnggota();
+}
+
+/* ---- sunting acara & obrolan ---- */
+async function simpanEvent(ev){
+  const bersih = Object.assign({}, ev); delete bersih.contoh; delete bersih.baru;
+  bersih.updatedAt = Date.now();
+  store.events[ev.id] = bersih;
+  simpanData(); terapkan(); jadwalkanDorongState(250);
+  return true;
+}
+async function hapusEvent(id){
+  store.events[id] = {id, deleted:true, updatedAt: Date.now()};
+  simpanData(); terapkan(); jadwalkanDorongState(250);
+}
+async function kirimChat(teks){
+  store.chat = store.chat.concat([{
+    id: uid("m"), who: state.saya.nama || "Tamu", warna: state.saya.warna, text: teks, at: Date.now()
+  }]).slice(-60);
+  simpanData(); terapkan(); jadwalkanDorongState(120);
+}
+
+/* ---- penggabungan keadaan antar perangkat (pemenang = tulisan terbaru) ---- */
+function gabungState(jauh){
+  if (!jauh || typeof jauh !== "object") return;
+  let berubah = false, perluKirim = false;
+  const evJauh = jauh.events || {};
+  Object.keys(evJauh).forEach(id => {
+    const r = evJauh[id], l = store.events[id];
+    if (!r || typeof r !== "object") return;
+    if (!l || (r.updatedAt||0) > (l.updatedAt||0)){ store.events[id] = r; berubah = true; }
+    else if ((l.updatedAt||0) > (r.updatedAt||0)) perluKirim = true;
+  });
+  Object.keys(store.events).forEach(id => { if (!(id in evJauh)) perluKirim = true; });
+
+  const chatJauh = Array.isArray(jauh.chat) ? jauh.chat : [];
+  const punya = new Set(store.chat.map(m => m.id));
+  const tambah = chatJauh.filter(m => m && m.id && !punya.has(m.id));
+  if (tambah.length){
+    store.chat = store.chat.concat(tambah).sort((a,b) => (a.at||0) - (b.at||0)).slice(-60);
+    berubah = true;
+  }
+  if (chatJauh.length < store.chat.length) perluKirim = true;
+
+  if (berubah){ simpanData(); terapkan(); }
+  if (perluKirim) jadwalkanDorongState(700);
+}
+
+/* ---- sambungan relay ---- */
+function gabungRuang(room){
+  room = String(room||"").trim().toLowerCase().replace(/\s+/g,"-").replace(/[^a-z0-9_.-]/g,"").slice(0,48);
+  if (!room){ keluarRuang(); return; }
+  if (!adaKripto()){ toast("Peramban ini tidak mendukung enkripsi, jadi ruang tim tidak bisa dipakai."); return; }
+  if (typeof mqtt === "undefined"){ toast("Pustaka sinkronisasi gagal dimuat."); return; }
+  if (room === net.room && net.aktif) return;
+
+  putuskanKlien();
+  net.room = room; net.percobaan = 0;
+  simpanLokal("selaras.room", room);
+  try{ history.replaceState(null, "", "#r=" + encodeURIComponent(room)); }catch(e){}
+  muatData();
+  net.status = "menyambung"; gambarRuang(); perbaruiStatusDeck();
+  (async () => {
+    net.kunci = await turunkanKunci(room);
+    net.topik = await hitungTopik(room);
+    net.salamPisah = await segel({t:"pergi", id: net.id});
+    sambungRelay();
+  })();
+}
+
+function keluarRuang(diam){
+  if (net.aktif) kirimLive({t:"pergi", id: net.id});
+  putuskanKlien();
+  net.room = null; net.topik = null; net.kunci = null; net.salamPisah = null; net.status = "lokal";
+  Object.keys(hadir).forEach(k => delete hadir[k]);
+  simpanLokal("selaras.room", "");
+  try{ history.replaceState(null, "", location.pathname + location.search); }catch(e){}
+  muatData(); susunPeers(); gambarRuang(); perbaruiStatusDeck();
+  if (!diam) toast("Kembali ke mode perangkat ini saja");
+}
+
+function putuskanKlien(){
+  net.aktif = false;
+  if (net.klien){ try{ net.klien.end(true); }catch(e){} net.klien = null; }
+}
+
+function sambungRelay(){
+  if (!net.room || !net.topik) return;
+  const r = RELAY[net.percobaan % RELAY.length];
+  net.status = "menyambung"; gambarRuang();
+  let klien;
+  try{
+    klien = mqtt.connect(r.url, {
+      clientId: "slrs_" + net.id, clean: true, keepalive: 45,
+      reconnectPeriod: 0, connectTimeout: 9000,
+      will: net.salamPisah ? {topic: net.topik+"/live", payload: net.salamPisah, qos:0, retain:false} : undefined
+    });
+  }catch(e){ ulangRelay(); return; }
+  net.klien = klien;
+
+  klien.on("connect", () => {
+    if (net.klien !== klien) return;
+    net.aktif = true; net.percobaan = 0; net.status = "tersambung";
+    gambarRuang(); perbaruiStatusDeck();
+    klien.subscribe([net.topik+"/state", net.topik+"/live"], {qos:0});
+    dorongKehadiran();
+    jadwalkanDorongState(900);   // beri jeda agar keadaan tersimpan lebih dulu tiba
+  });
+  klien.on("message", (topik, muatan) => {
+    buka(muatan.toString()).then(isi => {
+      if (!isi) return;
+      if (topik === net.topik+"/state") gabungState(isi); else terimaLive(isi);
+    });
+  });
+  klien.on("error", () => { if (net.klien === klien){ try{ klien.end(true); }catch(e){} ulangRelay(); } });
+  klien.on("close", () => { if (net.klien === klien && net.room) ulangRelay(); });
+}
+
+function ulangRelay(){
+  net.aktif = false; net.klien = null;
+  if (!net.room) return;
+  net.percobaan++;
+  if (net.percobaan > 5){
+    net.status = "gagal"; gambarRuang(); perbaruiStatusDeck();
+    toast("Relay tim tidak bisa dihubungi. Kalender tetap aman di perangkat ini.");
+    return;
+  }
+  net.status = "menyambung"; gambarRuang();
+  setTimeout(() => { if (net.room && !net.aktif) sambungRelay(); }, 900 * net.percobaan);
+}
+
+/* ---- siaran ---- */
+function jadwalkanDorongState(ms){
+  clearTimeout(net.antre);
+  net.antre = setTimeout(dorongState, ms || 600);
+}
+async function dorongState(){
+  if (!net.aktif || !net.klien) return;
+  const paket = await segel({v:1, events: store.events, chat: store.chat, at: Date.now()});
+  if (paket && net.klien) try{ net.klien.publish(net.topik+"/state", paket, {qos:0, retain:true}); }catch(e){}
+}
+async function kirimLive(obj){
+  if (!net.aktif || !net.klien) return;
+  const paket = await segel(obj);
+  if (paket && net.klien) try{ net.klien.publish(net.topik+"/live", paket, {qos:0}); }catch(e){}
+}
+
+function terimaLive(m){
+  if (!m || m.id === net.id) return;
+  if (m.t === "hadir"){
+    hadir[m.id] = Object.assign({}, hadir[m.id], m, {at: Date.now()});
+    susunPeers();
+  } else if (m.t === "kursor"){
+    if (!hadir[m.id]) hadir[m.id] = {who:m.who, warna:m.warna};
+    hadir[m.id].cx = m.cx; hadir[m.id].cy = m.cy; hadir[m.id].at = Date.now();
+    susunPeers();
+  } else if (m.t === "pergi"){
+    delete hadir[m.id]; susunPeers();
+  } else if (m.t === "sinyal"){
+    letupkan(); toast((m.who || "Seseorang") + " mengirim sinyal ke tim", "sig");
+  }
+}
+
+/* ---- kehadiran ---- */
+function dorongKehadiran(extra){
+  net.milik = Object.assign({
+    who: state.saya.nama || "Tamu",
+    warna: state.saya.warna,
+    tampilan: state.view,
+    fokusTanggal: state.pilih ? ((cariEvent(state.pilih)||{}).date || null) : null
+  }, net.milik, extra || {});
+  net.milik.who = state.saya.nama || "Tamu";
+  net.milik.warna = state.saya.warna;
+  net.milik.tampilan = state.view;
+  net.milik.fokusTanggal = state.pilih ? ((cariEvent(state.pilih)||{}).date || null) : null;
+  susunPeers();
+  kirimLive(Object.assign({t:"hadir", id: net.id}, net.milik));
+}
+
+function susunPeers(){
+  const kini = Date.now();
+  const daftar = [{
+    peer: net.id, isMe:true, sameTab:true, kind:"viewer",
+    presence: Object.assign({who: state.saya.nama || "Tamu", warna: state.saya.warna}, net.milik, {cx:null, cy:null})
+  }];
+  Object.keys(hadir).forEach(id => {
+    const p = hadir[id];
+    if (!p || kini - (p.at||0) > BATAS_HADIR){ delete hadir[id]; return; }
+    daftar.push({peer:id, isMe:false, sameTab:false, kind:"viewer", presence:p});
+  });
+  const berubahJumlah = daftar.length !== state.peers.length;
+  state.peers = daftar;
+  gambarKehadiran(); gambarKursor();
+  if (berubahJumlah && state.rail === "tim") gambarRail();
+}
+
+function orangDiRuang(){ return state.peers.length ? state.peers : [{peer:net.id, isMe:true, sameTab:true, kind:"viewer", presence:{who: state.saya.nama || "Tamu", warna: state.saya.warna}}]; }
+function warnaPeer(nama){
+  const p = state.peers.find(x => x.presence && x.presence.who === nama);
+  return p ? p.presence.warna : null;
+}
+
+function perbaruiTombolSaya(){
+  const b = document.getElementById("me-btn");
+  if (!b) return;
+  b.textContent = state.saya.nama ? state.saya.nama : "Atur nama";
+  b.style.borderColor = state.saya.nama ? "" : "var(--accent)";
+  b.style.color = state.saya.nama ? "" : "var(--accent)";
+  b.setAttribute("aria-label", state.saya.nama ? "Ubah nama dan warna penanda" : "Atur nama panggilan");
+}
+
+function gambarKehadiran(){
+  const orang = orangDiRuang();
+  const label = document.getElementById("live-count");
+  label.textContent = net.aktif ? (orang.length + " online") : "perangkat ini saja";
+  const box = document.getElementById("avatars");
+  box.innerHTML = orang.slice(0,6).map(p => {
+    const nama = (p.presence && p.presence.who) || "Tamu";
+    const warna = (p.presence && p.presence.warna) || warnaDari(nama);
+    return '<span class="av'+(p.isMe?" me":"")+'" style="background:'+esc(warna)+'" title="'+esc(nama)+(p.isMe?" (kamu)":"")+'">'+esc(inisial(nama))+'</span>';
+  }).join("") + (orang.length > 6 ? '<span class="av" style="background:var(--surface-3);color:var(--ink)">+'+(orang.length-6)+'</span>' : "");
+}
+
+function gambarKursor(){
+  const lapis = document.getElementById("cursors");
+  const lain = state.peers.filter(p => !p.isMe && p.presence && typeof p.presence.cx === "number");
+  lapis.innerHTML = lain.map(p => {
+    const warna = p.presence.warna || warnaDari(p.presence.who || "?");
+    return '<div class="cur" style="left:'+(p.presence.cx*100)+'%;top:'+(p.presence.cy*100)+'%">'
+      + '<svg width="15" height="18" viewBox="0 0 15 18" aria-hidden="true"><path d="M1 1l12 7-5.2 1.6L5.6 16z" fill="'+esc(warna)+'" stroke="#0B0F1C" stroke-width="1"/></svg>'
+      + '<span style="background:'+esc(warna)+'">'+esc(p.presence.who || "Tamu")+'</span></div>';
+  }).join("");
+}
+
+function letupkan(){
+  if (matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  const r = document.createElement("div"); r.className = "pulse-ring";
+  document.body.appendChild(r); setTimeout(() => r.remove(), 1200);
+}
+
+function perbaruiStatusDeck(){
+  const sub = document.getElementById("deck-sub");
+  sub.textContent = net.aktif ? ("ruang " + net.room) : "kalender tim · luring";
+}
+
+function gambarRuang(){
+  const chip = document.getElementById("room-chip");
+  if (!chip) return;
+  const peta = {
+    lokal:      {teks:"Mode lokal",  warna:"var(--muted)"},
+    menyambung: {teks:"Menyambung…", warna:"var(--accent)"},
+    tersambung: {teks: net.room || "Ruang tim", warna:"var(--good)"},
+    gagal:      {teks:"Relay gagal", warna:"var(--alert)"}
+  };
+  const s = peta[net.status] || peta.lokal;
+  chip.innerHTML = '<i class="dot" style="border-radius:50%;background:'+s.warna+'"></i><span>'+esc(s.teks)+'</span>';
+  chip.title = net.room ? ("Ruang tim: "+net.room) : "Belum bergabung ke ruang tim";
+}
+
+/* ---- dialog ruang tim ---- */
+function kodeAcak(){
+  const suku = ["biru","nusa","rimba","kabut","sigma","tirta","arjuna","lintang","pijar","satria"];
+  return suku[Math.floor(Math.random()*suku.length)] + "-" + suku[Math.floor(Math.random()*suku.length)] + "-" + Math.random().toString(36).slice(2,6);
+}
+function tautanUndangan(kode){
+  return location.origin + location.pathname + "#r=" + encodeURIComponent(kode);
+}
+function bukaRuangDialog(){
+  const veil = document.createElement("div");
+  veil.className = "veil";
+  veil.innerHTML = '<div class="sheet" role="dialog" aria-modal="true" aria-labelledby="r-judul" style="width:min(480px,100%)">'
+    + '<h3 id="r-judul">Ruang tim</h3>'
+    + '<p class="sub">Semua yang membuka tautan dengan kode yang sama melihat kalender yang sama, langsung saat itu juga.</p>'
+    + '<div class="inp"><label for="r-kode">Kode ruang</label>'
+    + '<input id="r-kode" maxlength="48" value="'+esc(net.room||"")+'" placeholder="mis. bhp-madya-2026" autocomplete="off"></div>'
+    + '<div class="pick" style="margin-bottom:12px">'
+    + '<button type="button" id="r-acak">Buatkan kode acak</button>'
+    + '<button type="button" id="r-salin">Salin tautan undangan</button>'
+    + '</div>'
+    + '<p class="ok-note" style="line-height:1.55">Isi kalender disegel di perangkat sebelum dikirim, jadi relay publik hanya melihat sandi acak. '
+    + 'Tapi <b>siapa pun yang punya kode atau tautannya bisa membaca dan mengubah kalender</b> — perlakukan seperti kata sandi bersama.</p>'
+    + '<div class="sheet-foot">'
+    + (net.room ? '<button type="button" class="danger-btn" id="r-keluar">Keluar ruang</button>' : "")
+    + '<button type="button" class="ghost-btn" id="r-batal">Tutup</button>'
+    + '<button type="button" class="primary-btn" id="r-ok">Gabung ruang</button></div></div>';
+  document.body.appendChild(veil);
+  const kolom = veil.querySelector("#r-kode");
+  setTimeout(() => kolom.focus(), 40);
+  const tutup = () => veil.remove();
+  veil.onclick = e => { if (e.target === veil) tutup(); };
+  veil.querySelector("#r-batal").onclick = tutup;
+  veil.querySelector("#r-acak").onclick = () => { kolom.value = kodeAcak(); kolom.focus(); };
+  veil.querySelector("#r-salin").onclick = async () => {
+    const kode = kolom.value.trim() || net.room;
+    if (!kode){ toast("Isi kodenya dulu"); return; }
+    try{ await navigator.clipboard.writeText(tautanUndangan(kode)); toast("Tautan undangan disalin"); }
+    catch(e){ kolom.value = tautanUndangan(kode); kolom.select(); toast("Salin tautan di kolom itu"); }
+  };
+  const keluar = veil.querySelector("#r-keluar");
+  if (keluar) keluar.onclick = () => { keluarRuang(); tutup(); };
+  veil.querySelector("#r-ok").onclick = () => { const k = kolom.value.trim(); tutup(); gabungRuang(k); };
+  kolom.onkeydown = e => { if (e.key === "Enter"){ const k = kolom.value.trim(); tutup(); gabungRuang(k); } };
+}
+
+/* ============================================================
+   3b. Co-pilot: SDK Anthropic resmi, kunci milik pemakai
+   ============================================================ */
+const ai = {
+  kunci: bacaLokal("selaras.kunci", "") || "",
+  modul: null, klien: null, fallback: true,
+  siap(){ return !!this.kunci; }
+};
+
+async function aiKlien(){
+  if (ai.klien) return ai.klien;
+  if (!ai.modul) ai.modul = await import("./vendor/anthropic.min.js");
+  ai.klien = new ai.modul.default({ apiKey: ai.kunci, dangerouslyAllowBrowser: true });
+  return ai.klien;
+}
+
+function jadiPesan(input){
+  if (typeof input === "string") return [{role:"user", content: input}];
+  return input.map(t => ({role: t.role, content: t.content}));
+}
+function soalBeta(err){
+  const s = (err && (err.status || err.statusCode)) || 0;
+  const pesan = String((err && err.message) || "");
+  return s === 400 && /beta|fallback|unsupported|unexpected/i.test(pesan);
+}
+
+/* Satu jalur untuk semua permintaan: mengalir, bisa dihentikan, sekali coba ulang
+   tanpa parameter fallback bila peladen menolak bendera betanya. */
+async function sampleAi(input, opsi){
+  opsi = opsi || {};
+  const klien = await aiKlien();
+  const badan = {
+    model: "claude-opus-5",
+    max_tokens: opsi.maxTokens || 8000,
+    output_config: { effort: opsi.effort || "medium" },
+    messages: jadiPesan(input)
+  };
+  let aliran, teks = "";
+  try{
+    if (ai.fallback){
+      aliran = klien.beta.messages.stream(
+        Object.assign({}, badan, {betas:["server-side-fallback-2026-07-01"], fallbacks:"default"}),
+        {signal: opsi.signal});
+    } else {
+      aliran = klien.messages.stream(badan, {signal: opsi.signal});
+    }
+    for await (const ev of aliran){
+      if (ev.type === "content_block_delta" && ev.delta && ev.delta.type === "text_delta"){
+        teks += ev.delta.text;
+        if (opsi.onText) opsi.onText({text: teks, delta: ev.delta.text});
+      }
+    }
+    const akhir = await aliran.finalMessage();
+    if (akhir.stop_reason === "refusal"){
+      const e = new Error("Permintaan itu ditolak."); e.kodeSelaras = "refused"; throw e;
+    }
+    return {text: teks, truncated: akhir.stop_reason === "max_tokens"};
+  }catch(err){
+    if (ai.fallback && soalBeta(err)){ ai.fallback = false; return sampleAi(input, opsi); }
+    if (teks) err.text = teks;
+    throw err;
+  }
+}
+
+/* Jawaban berupa data: dibaca dengan toleran (utuh, dalam pagar kode, atau
+   potongan antara kurung pertama dan terakhir). */
+async function sampleAiJson(input, opsi){
+  const {text} = await sampleAi(input, Object.assign({}, opsi, {maxTokens: (opsi && opsi.maxTokens) || 2000}));
+  const coba = [text];
+  const pagar = text.match(/```(?:json)?\s*([\s\S]*?)```/);
+  if (pagar) coba.push(pagar[1]);
+  const awal = text.search(/[\[{]/), akhir = Math.max(text.lastIndexOf("]"), text.lastIndexOf("}"));
+  if (awal >= 0 && akhir > awal) coba.push(text.slice(awal, akhir+1));
+  for (const c of coba){ try{ return JSON.parse(c.trim()); }catch(e){} }
+  const e = new Error("Jawaban tidak terbaca sebagai data."); e.kodeSelaras = "invalid_json"; e.text = text; throw e;
+}
+
+function pesanGagalAi(err){
+  const s = (err && (err.status || err.statusCode)) || 0;
+  if (err && err.kodeSelaras === "invalid_json") return "Jawabannya tidak terbaca sebagai data. Coba ulangi dengan kalimat yang lebih spesifik.";
+  if (err && err.kodeSelaras === "refused") return "Permintaan itu ditolak. Ubah isi permintaannya.";
+  if (err && (err.name === "AbortError" || /abort/i.test(String(err.message||"")))) return "Dihentikan.";
+  if (s === 401 || s === 403) return "Kunci API ditolak. Periksa kembali kuncinya lewat tombol Aktifkan co-pilot.";
+  if (s === 429) return "Batas pemakaian tercapai. Coba lagi beberapa saat lagi.";
+  if (s === 400) return "Permintaan ditolak peladen: " + String((err && err.message) || "").slice(0,160);
+  if (s >= 500) return "Peladen Anthropic sedang bermasalah. Coba lagi sebentar lagi.";
+  return "Co-pilot tidak bisa dihubungi. Periksa koneksi internet, lalu coba lagi.";
+}
+
+async function aliranAi(input, opsi){
+  const id = "ai_" + Date.now();
+  konsol.push({peran:"ai", id, html:'<span class="thinking"><i></i><i></i><i></i> memproses</span>'});
+  tulisKonsol();
+  kendali = new AbortController();
+  try{
+    const hasil = await sampleAi(input, Object.assign({
+      signal: kendali.signal,
+      onText: ({text}) => {
+        const el = document.getElementById(id);
+        if (el){ el.textContent = text; const b = document.getElementById("console"); if (b) b.scrollTop = b.scrollHeight; }
+      }
+    }, opsi || {}));
+    const m = konsol.find(x => x.id === id);
+    if (m){ m.teks = hasil.text; m.html = null; }
+    tulisKonsol();
+    return hasil.text;
+  }catch(err){
+    const m = konsol.find(x => x.id === id);
+    if (m){ m.html = null; m.teks = err.text || pesanGagalAi(err); }
+    tulisKonsol();
+    return null;
+  }finally{ kendali = null; }
+}
+
+function bukaKunciAi(){
+  const veil = document.createElement("div");
+  veil.className = "veil";
+  veil.innerHTML = '<div class="sheet" role="dialog" aria-modal="true" aria-labelledby="k-judul" style="width:min(480px,100%)">'
+    + '<h3 id="k-judul">Aktifkan co-pilot</h3>'
+    + '<p class="sub">Co-pilot memakai kunci API Anthropic milikmu. Buat kunci di console.anthropic.com, lalu tempel di sini.</p>'
+    + '<div class="inp"><label for="k-kunci">Kunci API</label><input id="k-kunci" type="password" placeholder="sk-ant-…" value="'+esc(ai.kunci)+'" autocomplete="off"></div>'
+    + '<p class="ok-note" style="line-height:1.55">Kunci disimpan di peramban ini saja dan dikirim langsung ke Anthropic — tidak pernah lewat relay tim maupun peladen lain. '
+    + 'Jangan tempel kunci di komputer bersama, dan hapus kuncinya setelah selesai.</p>'
+    + '<div class="sheet-foot">'
+    + (ai.kunci ? '<button type="button" class="danger-btn" id="k-hapus">Hapus kunci</button>' : "")
+    + '<button type="button" class="ghost-btn" id="k-batal">Tutup</button>'
+    + '<button type="button" class="primary-btn" id="k-ok">Simpan</button></div></div>';
+  document.body.appendChild(veil);
+  const kolom = veil.querySelector("#k-kunci");
+  setTimeout(() => kolom.focus(), 40);
+  const tutup = () => veil.remove();
+  veil.onclick = e => { if (e.target === veil) tutup(); };
+  veil.querySelector("#k-batal").onclick = tutup;
+  const hapus = veil.querySelector("#k-hapus");
+  if (hapus) hapus.onclick = () => { ai.kunci = ""; ai.klien = null; simpanLokal("selaras.kunci",""); tutup(); railAi(); toast("Kunci dihapus dari peramban ini"); };
+  const simpan = () => {
+    const v = kolom.value.trim();
+    if (!v){ toast("Kuncinya belum diisi"); return; }
+    ai.kunci = v; ai.klien = null; simpanLokal("selaras.kunci", v);
+    tutup(); railAi(); toast("Co-pilot aktif");
+  };
+  veil.querySelector("#k-ok").onclick = simpan;
+  kolom.onkeydown = e => { if (e.key === "Enter") simpan(); };
+}
+
+
+/* ============================================================
+   4. Turunan data: saring, bentrok, beban
+   ============================================================ */
+const cariEvent = id => state.events.find(e => e.id === id);
+
+function anggotaDikenal(){
+  const set = new Set();
+  state.chat.forEach(m => { if (m.who) set.add(m.who); });
+  state.events.forEach(e => { if (e.owner) set.add(e.owner); (e.attendees||[]).forEach(a => set.add(a)); });
+  orangDiRuang().forEach(p => { if (p.presence && p.presence.who) set.add(p.presence.who); });
+  if (state.saya.nama) set.add(state.saya.nama);
+  return [...set].filter(Boolean).sort((a,b) => a.localeCompare(b, "id"));
+}
+
+function eventTampil(){
+  const q = state.q.trim().toLowerCase();
+  return state.events.filter(e => {
+    if (!state.filterCat[e.cat || "rapat"]) return false;
+    if (state.filterMember !== "all"){
+      const org = [e.owner].concat(e.attendees||[]);
+      if (!org.includes(state.filterMember)) return false;
+    }
+    if (q){
+      const bak = [e.title, e.notes, (e.attendees||[]).join(" "), e.owner].join(" ").toLowerCase();
+      if (!bak.includes(q)) return false;
+    }
+    return true;
+  }).sort((a,b) => (a.date+a.start).localeCompare(b.date+b.start));
+}
+
+/* Dua acara bentrok bila waktunya beririsan dan ada orang yang sama. */
+function idBentrok(){
+  const bentrok = new Set(), perHari = {};
+  eventTampil().forEach(e => { (perHari[e.date] = perHari[e.date] || []).push(e); });
+  Object.values(perHari).forEach(list => {
+    for (let i = 0; i < list.length; i++) for (let j = i+1; j < list.length; j++){
+      const a = list[i], b = list[j];
+      if (toMin(a.start) < toMin(b.end) && toMin(b.start) < toMin(a.end)){
+        const oa = new Set([a.owner].concat(a.attendees||[]).filter(Boolean));
+        const ob = [b.owner].concat(b.attendees||[]).filter(Boolean);
+        if (ob.some(x => oa.has(x))){ bentrok.add(a.id); bentrok.add(b.id); }
+      }
+    }
+  });
+  return bentrok;
+}
+
+function rentangTampil(){
+  if (state.view === "minggu"){ const s = startOfWeek(state.anchor); return [s, addDays(s,6)]; }
+  if (state.view === "agenda"){ return [new Date(state.anchor), addDays(state.anchor, 29)]; }
+  const s = new Date(state.anchor.getFullYear(), state.anchor.getMonth(), 1);
+  return [s, new Date(state.anchor.getFullYear(), state.anchor.getMonth()+1, 0)];
+}
+
+function bebanPerAnggota(){
+  const [a,b] = rentangTampil(), ai = iso(a), bi = iso(b), jam = {};
+  eventTampil().forEach(e => {
+    if (e.date < ai || e.date > bi) return;
+    const durasi = Math.max(0, toMin(e.end) - toMin(e.start)) / 60;
+    const orang = [...new Set([e.owner].concat(e.attendees||[]).filter(Boolean))];
+    orang.forEach(o => { jam[o] = (jam[o]||0) + durasi; });
+  });
+  return Object.entries(jam).map(([nama,j]) => ({nama, jam:j})).sort((x,y) => y.jam - x.jam);
+}
+
+/* ============================================================
+   5. Penggambaran kalender
+   ============================================================ */
+const elView = document.getElementById("view");
+
+function gambar(){
+  const bentrok = idBentrok();
+  document.getElementById("period").textContent = labelPeriode();
+  if (state.view === "bulan") elView.innerHTML = htmlBulan(bentrok);
+  else if (state.view === "minggu") elView.innerHTML = htmlMinggu(bentrok);
+  else elView.innerHTML = htmlAgenda(bentrok);
+  pasangAksiKalender();
+  gambarKursor();
+}
+
+function labelPeriode(){
+  if (state.view === "minggu"){
+    const s = startOfWeek(state.anchor), e = addDays(s,6);
+    const sb = BULAN[s.getMonth()].slice(0,3), eb = BULAN[e.getMonth()].slice(0,3);
+    return s.getDate()+" "+sb+" – "+e.getDate()+" "+eb+" "+e.getFullYear();
+  }
+  if (state.view === "agenda") return "30 hari sejak "+state.anchor.getDate()+" "+BULAN[state.anchor.getMonth()].slice(0,3);
+  return BULAN[state.anchor.getMonth()]+" "+state.anchor.getFullYear();
+}
+
+function htmlBulan(bentrok){
+  const awalBulan = new Date(state.anchor.getFullYear(), state.anchor.getMonth(), 1);
+  const mulai = startOfWeek(awalBulan);
+  const evs = eventTampil();
+  const perHari = {}; evs.forEach(e => (perHari[e.date] = perHari[e.date] || []).push(e));
+  const fokusPeer = {};
+  state.peers.filter(p => !p.isMe && p.presence && p.presence.fokusTanggal)
+    .forEach(p => { fokusPeer[p.presence.fokusTanggal] = p.presence; });
+
+  let sel = '<div class="dow">'+HARI_PENDEK.map(d => "<span>"+d+"</span>").join("")+"</div><div class='month'>";
+  for (let i = 0; i < 42; i++){
+    const d = addDays(mulai, i), key = iso(d);
+    const luar = d.getMonth() !== state.anchor.getMonth();
+    if (i >= 35 && luar) continue;
+    const list = perHari[key] || [];
+    const tampil = list.slice(0,3);
+    const pf = fokusPeer[key];
+    sel += '<div class="cell'+(luar?" out":"")+(key===HARI_INI?" today":"")+'" data-day="'+key+'">'
+      + (pf ? '<div class="peer-ring" style="--pc:'+esc(pf.warna||"#63C2FF")+'"><span>'+esc(pf.who||"Tamu")+'</span></div>' : "")
+      + '<div class="cell-head"><span class="daynum">'+d.getDate()+'</span>'
+      + '<button type="button" class="addhere" data-add="'+key+'" aria-label="Tambah acara '+esc(key)+'">+</button></div>'
+      + tampil.map(e => {
+          const k = KATEGORI[e.cat] || KATEGORI.rapat;
+          return '<button type="button" class="ev'+(bentrok.has(e.id)?" clash":"")+(state.pilih===e.id?" sel":"")+'" data-ev="'+e.id+'" style="--cat:'+k.warna+'">'
+            + '<span class="t">'+esc(e.start)+'</span><span class="n">'+esc(e.title)+'</span></button>';
+        }).join("")
+      + (list.length > 3 ? '<button type="button" class="more" data-day-open="'+key+'">+'+(list.length-3)+' lagi</button>' : "")
+      + '</div>';
+  }
+  return sel + "</div>";
+}
+
+function htmlMinggu(bentrok){
+  const s = startOfWeek(state.anchor), JAM_AWAL = 6, JAM_AKHIR = 21;
+  const evs = eventTampil();
+  let sel = '<div class="week-wrap"><div class="week"><div class="wh"></div>';
+  for (let i = 0; i < 7; i++){
+    const d = addDays(s,i);
+    sel += '<div class="wh'+(iso(d)===HARI_INI?" today":"")+'"><small>'+HARI_PENDEK[d.getDay()]+'</small><b>'+d.getDate()+'</b></div>';
+  }
+  for (let h = JAM_AWAL; h <= JAM_AKHIR; h++){
+    sel += '<div class="hour">'+pad(h)+':00</div>';
+    for (let i = 0; i < 7; i++){
+      const key = iso(addDays(s,i));
+      let isi = "";
+      if (h === JAM_AWAL){
+        const hari = evs.filter(e => e.date === key);
+        isi = hari.map(e => {
+          const k = KATEGORI[e.cat] || KATEGORI.rapat;
+          const atas = (toMin(e.start) - JAM_AWAL*60) / 60 * 44;
+          const tinggi = Math.max(24, (toMin(e.end) - toMin(e.start)) / 60 * 44 - 3);
+          if (atas < -44) return "";
+          return '<button type="button" class="wev'+(bentrok.has(e.id)?" clash":"")+'" data-ev="'+e.id+'" style="--cat:'+k.warna+';top:'+atas+'px;height:'+tinggi+'px">'
+            + '<b>'+esc(e.title)+'</b><small>'+esc(e.start)+'–'+esc(e.end)+'</small></button>';
+        }).join("");
+        if (key === HARI_INI){
+          const kini = new Date(), menit = kini.getHours()*60 + kini.getMinutes();
+          const y = (menit - JAM_AWAL*60)/60*44;
+          if (y > 0 && y < (JAM_AKHIR-JAM_AWAL+1)*44) isi += '<div class="now-line" style="top:'+y+'px"></div>';
+        }
+      }
+      sel += '<div class="slot" data-day="'+key+'" data-hour="'+pad(h)+':00">'+isi+'</div>';
+    }
+  }
+  return sel + "</div></div>";
+}
+
+function htmlAgenda(bentrok){
+  const evs = eventTampil();
+  const [a,b] = rentangTampil(), ai = iso(a), bi = iso(b);
+  const dalam = evs.filter(e => e.date >= ai && e.date <= bi);
+  if (!dalam.length) return htmlKosong();
+  const perHari = {}; dalam.forEach(e => (perHari[e.date] = perHari[e.date] || []).push(e));
+  return '<div class="agenda">' + Object.keys(perHari).sort().map(key => {
+    const d = fromIso(key);
+    return '<div class="ag-day"><div class="ag-date'+(key===HARI_INI?" today":"")+'">'+HARI_PENDEK[d.getDay()]+'<b>'+d.getDate()+'</b>'+BULAN[d.getMonth()].slice(0,3)+'</div><div class="ag-list">'
+      + perHari[key].map(e => {
+          const k = KATEGORI[e.cat] || KATEGORI.rapat;
+          const org = [...new Set([e.owner].concat(e.attendees||[]).filter(Boolean))];
+          return '<button type="button" class="ag-item" data-ev="'+e.id+'" style="--cat:'+k.warna+'">'
+            + '<span class="time">'+esc(e.start)+'<br>'+esc(e.end)+'</span><span><span class="title">'+esc(e.title)
+            + (bentrok.has(e.id) ? ' <span style="color:var(--alert);font-size:11px">⚠ bentrok</span>' : "")
+            + '</span><span class="meta"><span>'+k.ikon+" "+k.label+'</span>'
+            + (org.length ? '<span>'+esc(org.join(", "))+'</span>' : "")
+            + (e.priority === "tinggi" ? '<span style="color:var(--accent)">prioritas tinggi</span>' : "")
+            + '</span></span></button>';
+        }).join("")
+      + '</div></div>';
+  }).join("") + '</div>';
+}
+
+function htmlKosong(){
+  return '<div class="empty"><h3>Belum ada acara pada rentang ini</h3>'
+    + '<p style="margin:0;max-width:38ch">Tambahkan acara pertama, atau tulis permintaan dalam bahasa sehari-hari di Co-pilot — misalnya “rapat evaluasi Jumat 14.00 dua jam bersama Rani”.</p>'
+    + '<button type="button" class="primary-btn" data-add="'+HARI_INI+'">+ Acara baru</button></div>';
+}
+
+function pasangAksiKalender(){
+  elView.querySelectorAll("[data-ev]").forEach(b => b.onclick = () => bukaEditor(cariEvent(b.dataset.ev)));
+  elView.querySelectorAll("[data-add]").forEach(b => b.onclick = e => { e.stopPropagation(); bukaEditor(null, b.dataset.add); });
+  elView.querySelectorAll("[data-day-open]").forEach(b => b.onclick = () => {
+    state.anchor = fromIso(b.dataset.dayOpen); setView("agenda");
+  });
+  elView.querySelectorAll(".slot").forEach(s => s.ondblclick = () => bukaEditor(null, s.dataset.day, s.dataset.hour));
+  elView.querySelectorAll(".cell").forEach(c => c.onclick = ev => { if (ev.target === c) bukaEditor(null, c.dataset.day); });
+}
+
+/* ============================================================
+   6. Rel samping: co-pilot, tim, beban
+   ============================================================ */
+const elRail = document.getElementById("rail-body");
+
+function gambarRail(){
+  if (state.rail === "ai") railAi();
+  else if (state.rail === "tim") railTim();
+  else railBeban();
+}
+
+/* ---- Co-pilot ---- */
+let konsol = [];   // {peran:"ai"|"kamu", teks, html?}
+const drafAgenda = {};
+let sedangTanya = false;
+let kendali = null;
+
+function railAi(){
+  const ada = ai.siap();
+  elRail.innerHTML = '<h2>Co-pilot jadwal</h2>'
+    + (ada ? '' : '<div class="ai-off">Co-pilot memakai kunci API Anthropic milikmu sendiri. Kunci hanya disimpan di peramban ini dan dikirim langsung ke Anthropic.<br><button type="button" class="ghost-btn" id="ai-nyalakan" style="margin-top:9px">Aktifkan co-pilot</button></div>')
+    + '<div class="ai-acts">'
+    + '<button type="button" class="ai-act" data-ai="slot"'+(ada?"":" disabled")+'>Cari slot kosong<small>3 usulan waktu bebas bentrok</small></button>'
+    + '<button type="button" class="ai-act" data-ai="ringkas"'+(ada?"":" disabled")+'>Ringkas periode<small>sorotan & risiko jadwal</small></button>'
+    + '<button type="button" class="ai-act" data-ai="agenda"'+(ada&&state.pilih?"":" disabled")+'>Susun agenda<small>'+(state.pilih ? esc((cariEvent(state.pilih)||{}).title||"") : "pilih satu acara dulu")+'</small></button>'
+    + '<button type="button" class="ai-act" data-ai="tulis"'+(ada?"":" disabled")+'>Tulis acara<small>dari kalimat biasa</small></button>'
+    + '</div>'
+    + '<div class="console" id="console">'+htmlKonsol()+'</div>'
+    + '<div class="ask"><label for="ai-input" class="sr-only" style="position:absolute;left:-9999px">Pertanyaan untuk co-pilot</label>'
+    + '<textarea id="ai-input" rows="1" placeholder="Tanya apa saja soal jadwal tim…"'+(ada?"":" disabled")+'></textarea>'
+    + '<button type="button" class="send" id="ai-send" aria-label="Kirim"'+(ada?"":" disabled")+'>➤</button></div>';
+
+  elRail.querySelectorAll("[data-ai]").forEach(b => b.onclick = () => aksiAi(b.dataset.ai));
+  const nyalakan = elRail.querySelector("#ai-nyalakan");
+  if (nyalakan) nyalakan.onclick = bukaKunciAi;
+  const inp = elRail.querySelector("#ai-input");
+  if (inp){
+    inp.oninput = () => { inp.style.height = "auto"; inp.style.height = Math.min(120, inp.scrollHeight)+"px"; };
+    inp.onkeydown = e => { if (e.key === "Enter" && !e.shiftKey){ e.preventDefault(); tanyaBebas(inp.value); inp.value=""; inp.style.height="auto"; } };
+  }
+  const kirim = elRail.querySelector("#ai-send");
+  if (kirim) kirim.onclick = () => { const v = inp.value; inp.value=""; inp.style.height="auto"; tanyaBebas(v); };
+  const box = elRail.querySelector("#console"); if (box){ ikatKonsol(); box.scrollTop = box.scrollHeight; }
+}
+
+function htmlKonsol(){
+  if (!konsol.length){
+    return '<div class="msg ai"><span class="who">Co-pilot</span><div class="body">Halo'+(state.saya.nama ? " "+esc(state.saya.nama) : "")
+      + '. Aku membaca seluruh acara yang sedang tampil. Coba: <strong>“cari slot 90 menit untuk Shela dan Rani pekan depan”</strong>, atau tekan salah satu tombol di atas.</div></div>';
+  }
+  return konsol.map(m => '<div class="msg '+(m.peran==="ai"?"ai":"you")+'"><span class="who">'+(m.peran==="ai"?"Co-pilot":"Kamu")+'</span>'
+    + '<div class="body" '+(m.id?'id="'+m.id+'"':"")+'>'+(m.html || esc(m.teks))+'</div></div>').join("");
+}
+
+function tulisKonsol(){
+  const box = document.getElementById("console");
+  if (!box) return;
+  box.innerHTML = htmlKonsol();
+  ikatKonsol();
+  box.scrollTop = box.scrollHeight;
+}
+
+/* Tombol di dalam konsol harus diikat ulang setiap kali panel digambar. */
+function ikatKonsol(){
+  const box = document.getElementById("console");
+  if (!box) return;
+  box.querySelectorAll("[data-slot]").forEach(b => b.onclick = () => {
+    const d = JSON.parse(b.dataset.slot);
+    bukaEditor(null, d.date, d.start, d.end);
+  });
+  box.querySelectorAll("[data-simpan]").forEach(b => b.onclick = async () => {
+    const id = b.dataset.simpan, teks = drafAgenda[id];
+    const segar = cariEvent(id);
+    if (!segar || !teks){ toast("Acara itu sudah tidak ada."); return; }
+    const ok = await simpanEvent(Object.assign({}, segar, {notes: (segar.notes ? segar.notes+"\n\n" : "") + teks}));
+    if (ok) toast("Agenda tersimpan di catatan acara");
+  });
+}
+
+function konteksJadwal(maks){
+  const evs = eventTampil().slice(0, 60);
+  const baris = evs.map(e => {
+    const org = [...new Set([e.owner].concat(e.attendees||[]).filter(Boolean))].join("/") || "-";
+    return e.date+" "+e.start+"-"+e.end+" ["+(KATEGORI[e.cat]||KATEGORI.rapat).label+"] "+e.title+" — "+org;
+  }).join("\n");
+  return baris.slice(0, maks || 3000);
+}
+
+function pembuka(){
+  return "Kamu co-pilot penjadwalan untuk sebuah tim kerja di Indonesia. Jawab ringkas dalam bahasa Indonesia yang wajar, tanpa basa-basi.\n"
+    + "Hari ini "+tanggalPanjang(HARI_INI)+".\n"
+    + "Anggota tim: "+(anggotaDikenal().join(", ") || "belum terdata")+".\n"
+    + "Kategori acara yang sah: rapat, lapangan, tenggat, fokus.\n"
+    + "Acara yang sedang tampil di kalender:\n"+(konteksJadwal() || "(kosong)");
+}
+
+async function tanyaBebas(teks){
+  teks = String(teks||"").trim();
+  if (!teks || !ai.siap() || sedangTanya) return;
+  sedangTanya = true;
+  konsol.push({peran:"kamu", teks}); tulisKonsol();
+  state.aiTurns.push({role:"user", content: teks});
+  const turns = [{role:"user", content: pembuka()}].concat(state.aiTurns.slice(-8));
+  const jawab = await aliranAi(turns, {});
+  if (jawab) state.aiTurns.push({role:"assistant", content: jawab});
+  sedangTanya = false;
+}
+
+async function aksiAi(jenis){
+  if (!ai.siap() || sedangTanya) return;
+  sedangTanya = true;
+  try{
+    if (jenis === "ringkas"){
+      konsol.push({peran:"kamu", teks:"Ringkas jadwal "+labelPeriode()}); tulisKonsol();
+      await aliranAi(pembuka()+"\n\nRingkas jadwal periode "+labelPeriode()+" dalam maksimal 6 poin: beban terberat, potensi bentrok, tenggat yang mepet, dan satu saran perbaikan konkret.");
+    }
+    else if (jenis === "slot"){
+      konsol.push({peran:"kamu", teks:"Cari slot kosong untuk tim"}); tulisKonsol();
+      konsol.push({peran:"ai", id:"slot_wait", html:'<span class="thinking"><i></i><i></i><i></i> mencari celah</span>'}); tulisKonsol();
+      let data = null;
+      try{
+        data = await sampleAiJson(pembuka()
+          + "\n\nCari 3 slot rapat 60 menit dalam 10 hari kerja ke depan yang tidak beririsan dengan acara mana pun di atas, pada jam kerja 08:00–16:00, hindari Sabtu/Minggu."
+          + '\nBalas HANYA array JSON: [{"date":"YYYY-MM-DD","start":"HH:MM","end":"HH:MM","alasan":"satu kalimat singkat"}]', {effort:"high"});
+      }catch(err){
+        konsol = konsol.filter(x => x.id !== "slot_wait");
+        konsol.push({peran:"ai", teks: pesanGagalAi(err)}); tulisKonsol(); return;
+      }
+      konsol = konsol.filter(x => x.id !== "slot_wait");
+      const daftar = Array.isArray(data) ? data.slice(0,3) : [];
+      if (!daftar.length){ konsol.push({peran:"ai", teks:"Belum ketemu celah yang aman. Coba longgarkan rentang harinya."}); tulisKonsol(); return; }
+      konsol.push({peran:"ai", html:"Tiga celah yang aman — klik untuk langsung menyusun acaranya:" + daftar.map(s => {
+        const aman = /^\d{4}-\d{2}-\d{2}$/.test(String(s.date||""));
+        if (!aman) return "";
+        return '<button type="button" class="slot-card" data-slot=\''+esc(JSON.stringify({date:s.date, start:s.start||"09:00", end:s.end||"10:00"}))+'\'>'
+          + '<b>'+esc(tanggalPanjang(s.date))+' · '+esc(s.start||"")+'–'+esc(s.end||"")+'</b>'+esc(s.alasan||"")+'</button>';
+      }).join("")}); tulisKonsol();
+    }
+    else if (jenis === "agenda"){
+      const ev = cariEvent(state.pilih); if (!ev) return;
+      konsol.push({peran:"kamu", teks:"Susun agenda untuk “"+ev.title+"”"}); tulisKonsol();
+      const teks = await aliranAi(pembuka()+"\n\nSusun agenda rapat untuk acara berikut: "+ev.title+" pada "+tanggalPanjang(ev.date)+" "+ev.start+"–"+ev.end
+        + " bersama "+([...new Set([ev.owner].concat(ev.attendees||[]).filter(Boolean))].join(", ")||"tim")+". Catatan saat ini: "+(ev.notes||"-")
+        + "\nBerikan 4–6 butir agenda dengan alokasi menit, lalu satu baris hasil yang diharapkan. Format daftar bernomor, tanpa pengantar.");
+      if (teks){
+        drafAgenda[ev.id] = teks;
+        konsol.push({peran:"ai", html:'<button type="button" class="slot-card" data-simpan="'+esc(ev.id)+'"><b>Simpan agenda ke catatan acara</b>'+esc(ev.title)+'</button>'});
+        tulisKonsol();
+      }
+    }
+    else if (jenis === "tulis"){
+      const kalimat = prompt("Tulis acaranya dengan kalimat biasa:", "rapat evaluasi berkas Jumat pukul 14.00 selama 2 jam bersama Rani dan Dimas");
+      if (!kalimat) return;
+      konsol.push({peran:"kamu", teks:kalimat}); tulisKonsol();
+      konsol.push({peran:"ai", id:"tulis_wait", html:'<span class="thinking"><i></i><i></i><i></i> menyusun acara</span>'}); tulisKonsol();
+      let d = null;
+      try{
+        d = await sampleAiJson(pembuka()
+          + '\n\nUbah permintaan berikut menjadi SATU objek JSON acara. Balas HANYA JSON dengan bentuk: {"title":"","date":"YYYY-MM-DD","start":"HH:MM","end":"HH:MM","cat":"rapat|lapangan|tenggat|fokus","attendees":[""],"notes":""}.'
+          + "\nPermintaan: "+kalimat, {effort:"low"});
+      }catch(err){
+        konsol = konsol.filter(x => x.id !== "tulis_wait");
+        konsol.push({peran:"ai", teks: pesanGagal(err.code)}); tulisKonsol(); return;
+      }
+      konsol = konsol.filter(x => x.id !== "tulis_wait");
+      if (!d || !d.title){ konsol.push({peran:"ai", teks:"Belum bisa membaca permintaan itu sebagai acara. Sebutkan hari dan jamnya."}); tulisKonsol(); return; }
+      konsol.push({peran:"ai", teks:"Draf siap — periksa lalu simpan."}); tulisKonsol();
+      bukaEditor({
+        id: uid("e"), title:String(d.title).slice(0,120),
+        date: /^\d{4}-\d{2}-\d{2}$/.test(String(d.date)) ? d.date : HARI_INI,
+        start: /^\d{2}:\d{2}$/.test(String(d.start)) ? d.start : "09:00",
+        end: /^\d{2}:\d{2}$/.test(String(d.end)) ? d.end : "10:00",
+        cat: KATEGORI[d.cat] ? d.cat : "rapat",
+        attendees: Array.isArray(d.attendees) ? d.attendees.map(x => String(x).slice(0,40)).slice(0,12) : [],
+        notes: String(d.notes||"").slice(0,800),
+        priority:"normal", owner: state.saya.nama || "Tamu", baru:true
+      });
+    }
+  } finally { sedangTanya = false; railAi(); }
+}
+
+/* ---- Tim ---- */
+function railTim(){
+  const orang = orangDiRuang();
+  const online = new Set(orang.map(p => (p.presence && p.presence.who) || "Tamu"));
+  const semua = anggotaDikenal();
+  elRail.innerHTML = '<h2>Tim di anjungan</h2>'
+    + (semua.length ? semua.map(n => {
+        const warna = warnaPeer(n) || warnaDari(n);
+        const aktif = online.has(n);
+        const jml = state.events.filter(e => [e.owner].concat(e.attendees||[]).includes(n)).length;
+        return '<div class="member"><span class="av" style="background:'+esc(warna)+'">'+esc(inisial(n))+'</span>'
+          + '<span style="flex:1;min-width:0"><span class="nm">'+esc(n)+(n===state.saya.nama?" (kamu)":"")+'</span><br>'
+          + '<span class="st'+(aktif?" on":"")+'">'+(aktif?"sedang membuka":"luring")+' · '+jml+' acara</span></span></div>';
+      }).join("") : '<p class="ok-note">Belum ada anggota terdata. Nama akan muncul begitu rekan membuka halaman ini.</p>')
+    + '<h2 style="margin-top:16px">Obrolan tim</h2>'
+    + '<div class="chat" id="chat">'+(state.chat.length ? state.chat.map(m =>
+        '<div class="bubble"><span class="who" style="color:'+esc(m.warna||warnaDari(m.who))+'">'+esc(m.who)+'</span>'
+        + '<span class="at">'+new Date(m.at).toLocaleTimeString("id-ID",{hour:"2-digit",minute:"2-digit"})+'</span>'
+        + '<div class="tx">'+esc(m.text)+'</div></div>').join("")
+        : '<p class="ok-note">Belum ada pesan. Obrolan tersimpan untuk yang bergabung belakangan.</p>')+'</div>'
+    + '<div class="ask"><label for="chat-input" style="position:absolute;left:-9999px">Pesan untuk tim</label>'
+    + '<textarea id="chat-input" rows="1" placeholder="Kirim pesan ke tim…"></textarea>'
+    + '<button type="button" class="send" id="chat-send" aria-label="Kirim pesan">➤</button></div>';
+
+  const inp = elRail.querySelector("#chat-input");
+  const kirim = () => { const v = inp.value.trim(); if (!v) return; inp.value=""; kirimChat(v.slice(0,400)); };
+  inp.onkeydown = e => { if (e.key === "Enter" && !e.shiftKey){ e.preventDefault(); kirim(); } };
+  elRail.querySelector("#chat-send").onclick = kirim;
+  const box = elRail.querySelector("#chat"); if (box) box.scrollTop = box.scrollHeight;
+}
+
+/* ---- Beban & bentrok ---- */
+function railBeban(){
+  const beban = bebanPerAnggota();
+  const maks = Math.max(1, ...beban.map(b => b.jam));
+  const bentrok = idBentrok();
+  const evs = eventTampil();
+  const [a,b] = rentangTampil(), ai = iso(a), bi = iso(b);
+  const dalam = evs.filter(e => e.date >= ai && e.date <= bi);
+  const totalJam = dalam.reduce((s,e) => s + Math.max(0, toMin(e.end)-toMin(e.start))/60, 0);
+  const pasangan = [];
+  const dilihat = new Set();
+  dalam.forEach(e => { if (bentrok.has(e.id) && !dilihat.has(e.id)){ dilihat.add(e.id); pasangan.push(e); } });
+
+  elRail.innerHTML = '<h2>Beban '+esc(labelPeriode())+'</h2>'
+    + '<div class="stat-row">'
+    + '<div class="stat"><b>'+dalam.length+'</b><small>acara</small></div>'
+    + '<div class="stat"><b>'+totalJam.toFixed(1)+'</b><small>jam</small></div>'
+    + '<div class="stat"><b style="color:'+(pasangan.length?"var(--alert)":"var(--good)")+'">'+pasangan.length+'</b><small>bentrok</small></div>'
+    + '</div>'
+    + (beban.length
+        ? '<div class="bars">'+beban.slice(0,8).map(x => {
+            const w = Math.round(x.jam/maks*100);
+            return '<div class="bar-row"><span class="nm" title="'+esc(x.nama)+'">'+esc(x.nama)+'</span>'
+              + '<span class="track"><span class="fill'+(x.jam>maks*0.8&&beban.length>1?" hot":"")+'" style="width:'+w+'%"></span></span>'
+              + '<span class="val">'+x.jam.toFixed(1)+' j</span></div>';
+          }).join("")+'</div>'
+        : '<p class="ok-note">Belum ada beban tercatat pada periode ini.</p>')
+    + '<h2 style="margin-top:18px">Bentrok terdeteksi</h2>'
+    + (pasangan.length
+        ? pasangan.map(e => '<button type="button" class="clash-item" data-ev="'+e.id+'"><b>'+esc(e.title)+'</b>'
+            + esc(tanggalPanjang(e.date))+' · '+esc(e.start)+'–'+esc(e.end)+' · '
+            + esc([...new Set([e.owner].concat(e.attendees||[]).filter(Boolean))].join(", ")) + '</button>').join("")
+        : '<p class="ok-note">Tidak ada orang yang terjadwal di dua tempat sekaligus. Aman.</p>');
+
+  elRail.querySelectorAll("[data-ev]").forEach(b => b.onclick = () => bukaEditor(cariEvent(b.dataset.ev)));
+}
+
+/* ============================================================
+   7. Editor acara
+   ============================================================ */
+let editorAktif = null;
+
+function bukaEditor(ev, tanggal, jam, jamSelesai){
+  const baru = !ev || ev.baru;
+  const data = ev ? Object.assign({}, ev) : {
+    id: uid("e"), title:"", date: tanggal || iso(state.anchor), start: jam || "09:00",
+    end: jamSelesai || fromMin(toMin(jam || "09:00")+60), cat:"rapat",
+    attendees:[], notes:"", priority:"normal", owner: state.saya.nama || "Tamu"
+  };
+  if (ev && !ev.baru){ state.pilih = ev.id; dorongKehadiran(); gambar(); gambarRail(); }
+  editorAktif = data;
+
+  const veil = document.createElement("div");
+  veil.className = "veil"; veil.id = "editor-veil";
+  veil.innerHTML = '<div class="sheet" role="dialog" aria-modal="true" aria-labelledby="ed-judul">'
+    + '<h3 id="ed-judul">'+(baru ? "Acara baru" : "Ubah acara")+'</h3>'
+    + '<p class="sub">'+(net.aktif ? "Tersimpan dan langsung tersebar ke ruang tim." : "Tersimpan di perangkat ini. Gabung ruang tim agar tersebar ke rekan.")+'</p>'
+    + '<div class="inp"><label for="ed-title">Judul</label><input id="ed-title" value="'+esc(data.title)+'" placeholder="Rapat koordinasi mingguan"></div>'
+    + '<div class="grid2">'
+    + '<div class="inp"><label for="ed-date">Tanggal</label><input id="ed-date" type="date" value="'+esc(data.date)+'"></div>'
+    + '<div class="inp"><label for="ed-prio">Prioritas</label><select id="ed-prio"><option value="normal"'+(data.priority!=="tinggi"?" selected":"")+'>Normal</option><option value="tinggi"'+(data.priority==="tinggi"?" selected":"")+'>Tinggi</option></select></div>'
+    + '<div class="inp"><label for="ed-start">Mulai</label><input id="ed-start" type="time" value="'+esc(data.start)+'"></div>'
+    + '<div class="inp"><label for="ed-end">Selesai</label><input id="ed-end" type="time" value="'+esc(data.end)+'"></div>'
+    + '</div>'
+    + '<div class="inp"><label>Kategori</label><div class="pick" id="ed-cat">'
+    + Object.entries(KATEGORI).map(([k,v]) => '<button type="button" data-k="'+k+'" aria-pressed="'+(data.cat===k)+'" style="color:'+(data.cat===k?v.warna:"")+'"><i class="dot" style="background:'+v.warna+'"></i>'+v.label+'</button>').join("")
+    + '</div></div>'
+    + '<div class="inp"><label for="ed-att">Peserta <span style="text-transform:none;letter-spacing:0">(pisahkan dengan koma)</span></label>'
+    + '<input id="ed-att" value="'+esc((data.attendees||[]).join(", "))+'" placeholder="Shela, Rani, Dimas" list="daftar-anggota"></div>'
+    + '<datalist id="daftar-anggota">'+anggotaDikenal().map(n => '<option value="'+esc(n)+'"></option>').join("")+'</datalist>'
+    + '<div class="inp"><label for="ed-notes">Catatan & agenda</label><textarea id="ed-notes" placeholder="Poin bahasan, berkas yang perlu dibawa…">'+esc(data.notes||"")+'</textarea></div>'
+    + '<div class="sheet-foot">'
+    + (baru ? "" : '<button type="button" class="danger-btn" id="ed-del">Hapus acara</button>')
+    + '<button type="button" class="ghost-btn" id="ed-cancel">Batal</button>'
+    + '<button type="button" class="primary-btn" id="ed-save">'+(baru ? "Simpan acara" : "Perbarui")+'</button>'
+    + '</div></div>';
+  document.body.appendChild(veil);
+  setTimeout(() => { const t = document.getElementById("ed-title"); if (t) t.focus(); }, 30);
+
+  veil.onclick = e => { if (e.target === veil) tutupEditor(); };
+  document.addEventListener("keydown", tekanEsc);
+  veil.querySelectorAll("#ed-cat button").forEach(b => b.onclick = () => {
+    editorAktif.cat = b.dataset.k;
+    veil.querySelectorAll("#ed-cat button").forEach(x => {
+      const on = x.dataset.k === b.dataset.k;
+      x.setAttribute("aria-pressed", on);
+      x.style.color = on ? KATEGORI[x.dataset.k].warna : "";
+    });
+  });
+  document.getElementById("ed-cancel").onclick = tutupEditor;
+  const del = document.getElementById("ed-del");
+  if (del) del.onclick = async () => { await hapusEvent(data.id); tutupEditor(); toast("Acara dihapus"); };
+  document.getElementById("ed-save").onclick = async () => {
+    const judul = document.getElementById("ed-title").value.trim();
+    if (!judul){ toast("Judul acara belum diisi"); document.getElementById("ed-title").focus(); return; }
+    const mulai = document.getElementById("ed-start").value || "09:00";
+    let selesai = document.getElementById("ed-end").value || "10:00";
+    if (toMin(selesai) <= toMin(mulai)) selesai = fromMin(Math.min(23*60+59, toMin(mulai)+60));
+    const ev2 = {
+      id: data.id, title: judul.slice(0,140),
+      date: document.getElementById("ed-date").value || HARI_INI,
+      start: mulai, end: selesai,
+      cat: editorAktif.cat || "rapat",
+      priority: document.getElementById("ed-prio").value,
+      attendees: document.getElementById("ed-att").value.split(",").map(s => s.trim()).filter(Boolean).slice(0,15),
+      notes: document.getElementById("ed-notes").value.slice(0,2000),
+      owner: data.owner || state.saya.nama || "Tamu"
+    };
+    const ok = await simpanEvent(ev2);
+    if (ok){ state.pilih = ev2.id; tutupEditor(); toast(baru ? "Acara ditambahkan" : "Acara diperbarui"); gambar(); gambarRail(); dorongKehadiran(); }
+  };
+}
+
+function tekanEsc(e){ if (e.key === "Escape") tutupEditor(); }
+function tutupEditor(){
+  const v = document.getElementById("editor-veil");
+  if (v) v.remove();
+  document.removeEventListener("keydown", tekanEsc);
+  editorAktif = null;
+}
+
+/* ============================================================
+   8. Gerbang identitas
+   ============================================================ */
+function bukaGerbang(){
+  const veil = document.createElement("div");
+  veil.className = "veil";
+  veil.innerHTML = '<div class="sheet" role="dialog" aria-modal="true" aria-labelledby="g-judul" style="width:min(430px,100%)">'
+    + '<h3 id="g-judul">Masuk anjungan</h3>'
+    + '<p class="sub">Namamu dipakai untuk penanda kehadiran, peserta acara, dan obrolan tim.</p>'
+    + '<div class="inp"><label for="g-nama">Nama panggilan</label><input id="g-nama" maxlength="24" placeholder="mis. Shela" autocomplete="nickname"></div>'
+    + '<div class="inp"><label>Warna penanda</label><div class="pick" id="g-warna">'
+    + WARNA_ANGGOTA.map((w,i) => '<button type="button" data-w="'+w+'" aria-pressed="'+(i===0)+'" aria-label="Warna '+(i+1)+'"><i class="dot" style="background:'+w+';width:14px;height:14px;border-radius:4px"></i></button>').join("")
+    + '</div></div>'
+    + '<div class="inp"><label for="g-room">Kode ruang tim <span style="text-transform:none;letter-spacing:0">(kosongkan bila hanya untuk perangkat ini)</span></label>'
+    + '<input id="g-room" maxlength="48" placeholder="mis. bhp-madya-2026" value="'+esc(net.room||"")+'" autocomplete="off"></div>'
+    + '<div class="sheet-foot"><button type="button" class="ghost-btn" id="g-lewat">Masuk sebagai tamu</button>'
+    + '<button type="button" class="primary-btn" id="g-ok">Masuk</button></div></div>';
+  document.body.appendChild(veil);
+  let pilihWarna = state.saya.warna || WARNA_ANGGOTA[0];
+  veil.querySelectorAll("#g-warna button").forEach(b => {
+    b.setAttribute("aria-pressed", b.dataset.w === pilihWarna);
+    b.onclick = () => { pilihWarna = b.dataset.w; veil.querySelectorAll("#g-warna button").forEach(x => x.setAttribute("aria-pressed", x.dataset.w === pilihWarna)); };
+  });
+  const inp = veil.querySelector("#g-nama");
+  setTimeout(() => inp.focus(), 40);
+  let ruangDiminta = net.room || "";
+  const kolomRuang = veil.querySelector("#g-room");
+  if (kolomRuang) kolomRuang.oninput = () => { ruangDiminta = kolomRuang.value.trim(); };
+  const masuk = (nama) => {
+    state.saya.nama = (nama || "").trim().slice(0,24) || "Tamu";
+    state.saya.warna = pilihWarna;
+    simpanLokal("selaras.saya", state.saya);
+    veil.remove();
+    gambarKehadiran(); perbaruiTombolSaya(); gambarRail(); isiFilterAnggota();
+    dorongKehadiran();
+    toast("Selamat datang, "+state.saya.nama);
+    if (ruangDiminta && ruangDiminta !== net.room) gabungRuang(ruangDiminta);
+    else if (!ruangDiminta && net.room) keluarRuang();
+  };
+  inp.onkeydown = e => { if (e.key === "Enter") masuk(inp.value); };
+  veil.querySelector("#g-ok").onclick = () => masuk(inp.value);
+  veil.querySelector("#g-lewat").onclick = () => masuk("Tamu");
+}
+
+/* ============================================================
+   9. Ekspor .ics
+   ============================================================ */
+function bangunIcs(){
+  const stamp = new Date().toISOString().replace(/[-:]/g,"").split(".")[0]+"Z";
+  const baris = ["BEGIN:VCALENDAR","VERSION:2.0","PRODID:-//Anjungan Selaras//Kalender Tim//ID","CALSCALE:GREGORIAN"];
+  eventTampil().forEach(e => {
+    const d = e.date.replace(/-/g,"");
+    const lipat = s => String(s||"").replace(/([,;\\])/g,"\\$1").replace(/\n/g,"\\n");
+    baris.push("BEGIN:VEVENT","UID:"+e.id+"@selaras","DTSTAMP:"+stamp,
+      "DTSTART:"+d+"T"+e.start.replace(":","")+"00",
+      "DTEND:"+d+"T"+e.end.replace(":","")+"00",
+      "SUMMARY:"+lipat(e.title),
+      "CATEGORIES:"+((KATEGORI[e.cat]||KATEGORI.rapat).label),
+      "DESCRIPTION:"+lipat((e.notes||"") + (e.attendees&&e.attendees.length ? "\nPeserta: "+e.attendees.join(", ") : "")),
+      "END:VEVENT");
+  });
+  baris.push("END:VCALENDAR");
+  return baris.join("\r\n");
+}
+
+function eksporIcs(){
+  const isi = bangunIcs();
+  const nama = "kalender-tim-"+HARI_INI+".ics";
+  const tautan = document.createElement("a");
+  const berkas = new Blob([isi], {type:"text/calendar;charset=utf-8"});
+  tautan.href = URL.createObjectURL(berkas);
+  tautan.download = nama;
+  document.body.appendChild(tautan); tautan.click(); tautan.remove();
+  setTimeout(() => URL.revokeObjectURL(tautan.href), 4000);
+  toast("Berkas "+nama+" diunduh");
+}
+
+/* ============================================================
+   10. Kendali antarmuka
+   ============================================================ */
+function toast(teks, jenis){
+  const t = document.createElement("div");
+  t.className = "toast" + (jenis === "sig" ? " sig" : "");
+  t.textContent = teks;
+  document.getElementById("toasts").appendChild(t);
+  setTimeout(() => t.remove(), 3400);
+}
+
+function setView(v){
+  state.view = v;
+  document.querySelectorAll(".seg button").forEach(b => b.setAttribute("aria-pressed", b.dataset.view === v));
+  gambar(); gambarRail(); dorongKehadiran();
+}
+
+function isiFilterAnggota(){
+  const sel = document.getElementById("f-member");
+  const kini = state.filterMember;
+  sel.innerHTML = '<option value="all">Semua</option>' + anggotaDikenal().map(n => '<option value="'+esc(n)+'">'+esc(n)+'</option>').join("");
+  sel.value = [...sel.options].some(o => o.value === kini) ? kini : "all";
+}
+
+function geser(arah){
+  if (state.view === "bulan") state.anchor = new Date(state.anchor.getFullYear(), state.anchor.getMonth()+arah, 1);
+  else if (state.view === "minggu") state.anchor = addDays(state.anchor, 7*arah);
+  else state.anchor = addDays(state.anchor, 30*arah);
+  gambar(); gambarRail();
+}
+
+document.querySelectorAll(".seg button").forEach(b => b.onclick = () => setView(b.dataset.view));
+document.querySelectorAll(".rail-tabs button").forEach(b => b.onclick = () => {
+  state.rail = b.dataset.rail;
+  document.querySelectorAll(".rail-tabs button").forEach(x => x.setAttribute("aria-pressed", x.dataset.rail === state.rail));
+  gambarRail();
+});
+document.getElementById("prev").onclick = () => geser(-1);
+document.getElementById("next").onclick = () => geser(1);
+document.getElementById("today").onclick = () => { state.anchor = new Date(); gambar(); gambarRail(); };
+document.getElementById("new-ev").onclick = () => bukaEditor(null, iso(state.anchor));
+document.getElementById("export").onclick = eksporIcs;
+document.getElementById("room-chip").onclick = bukaRuangDialog;
+document.getElementById("pulse").onclick = () => {
+  letupkan();
+  if (!net.aktif){ toast("Belum tersambung ke ruang tim"); return; }
+  kirimLive({t:"sinyal", id:net.id, who: state.saya.nama || "Tamu"});
+  toast("Sinyal terkirim ke semua yang sedang membuka", "sig");
+};
+document.getElementById("me-btn").onclick = bukaGerbang;
+document.getElementById("q").oninput = e => { state.q = e.target.value; gambar(); gambarRail(); };
+document.getElementById("f-member").onchange = e => { state.filterMember = e.target.value; gambar(); gambarRail(); };
+document.querySelectorAll(".chip-cat").forEach(b => b.onclick = () => {
+  const k = b.dataset.cat;
+  state.filterCat[k] = !state.filterCat[k];
+  b.setAttribute("aria-pressed", state.filterCat[k]);
+  b.style.color = state.filterCat[k] ? "" : "var(--muted)";
+  b.style.opacity = state.filterCat[k] ? "1" : ".55";
+  gambar(); gambarRail();
+});
+
+const temaTersimpan = bacaLokal("selaras.tema", null);
+if (temaTersimpan) document.documentElement.setAttribute("data-theme", temaTersimpan);
+document.getElementById("theme").onclick = () => {
+  const kini = document.documentElement.getAttribute("data-theme");
+  const gelapSistem = matchMedia("(prefers-color-scheme: dark)").matches;
+  const berikut = kini ? (kini === "dark" ? "light" : "dark") : (gelapSistem ? "light" : "dark");
+  document.documentElement.setAttribute("data-theme", berikut);
+  simpanLokal("selaras.tema", berikut);
+};
+
+document.addEventListener("keydown", e => {
+  if (document.getElementById("editor-veil") || /^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement.tagName)) return;
+  if (e.key === "ArrowLeft") geser(-1);
+  else if (e.key === "ArrowRight") geser(1);
+  else if (e.key === "t") { state.anchor = new Date(); gambar(); gambarRail(); }
+  else if (e.key === "n") { e.preventDefault(); bukaEditor(null, iso(state.anchor)); }
+});
+
+/* ============================================================
+   11. Mulai
+   ============================================================ */
+gambarRuang();
+perbaruiStatusDeck();
+/* Di layar sempit, agenda jauh lebih terbaca daripada kisi bulanan. */
+if (window.innerWidth < 620) setView("agenda");
+
+const cocokTautan = location.hash.match(/[#&]r=([^&]*)/);
+const ruangAwal = cocokTautan ? decodeURIComponent(cocokTautan[1]) : (bacaLokal("selaras.room", "") || "");
+
+muatData();
+if (!Object.keys(store.events).length && !ruangAwal){
+  /* Halaman pertama kali dibuka: isi dengan jadwal contoh supaya langsung terbaca. */
+  jadwalContoh().forEach(e => { store.events[e.id] = Object.assign({}, e, {updatedAt: Date.now()}); });
+  simpanData();
+  terapkan();
+}
+susunPeers();
+perbaruiTombolSaya();
+if (ruangAwal) gabungRuang(ruangAwal);
+
+/* Kursor rekan: dikirim paling sering sepuluh kali sedetik, hanya saat tersambung. */
+const kanvas = document.querySelector(".canvas");
+let rafKursor = 0, posisiKursor = null, kirimTerakhir = 0;
+kanvas.addEventListener("pointermove", e => {
+  if (!net.aktif) return;
+  const r = kanvas.getBoundingClientRect();
+  posisiKursor = {cx: +((e.clientX - r.left)/r.width).toFixed(4), cy: +((e.clientY - r.top)/r.height).toFixed(4)};
+  if (rafKursor) return;
+  rafKursor = requestAnimationFrame(() => {
+    rafKursor = 0;
+    const kini = Date.now();
+    if (!posisiKursor || kini - kirimTerakhir < 110) return;
+    kirimTerakhir = kini;
+    kirimLive({t:"kursor", id: net.id, who: state.saya.nama || "Tamu", warna: state.saya.warna, cx: posisiKursor.cx, cy: posisiKursor.cy});
+  });
+});
+kanvas.addEventListener("pointerleave", () => {
+  posisiKursor = null;
+  if (net.aktif) kirimLive({t:"kursor", id: net.id, cx: null, cy: null});
+});
+
+window.addEventListener("hashchange", () => {
+  const m = location.hash.match(/[#&]r=([^&]*)/);
+  const kode = m ? decodeURIComponent(m[1]) : "";
+  if (kode && kode !== net.room) gabungRuang(kode);
+});
+window.addEventListener("beforeunload", () => { if (net.aktif) kirimLive({t:"pergi", id: net.id}); });
+
+setInterval(() => { if (net.aktif) dorongKehadiran(); }, 4500);
+setInterval(susunPeers, 4000);
+setInterval(() => { if (state.view === "minggu") gambar(); }, 60000);
+
+
+</script>
+</body>
+</html>
