@@ -1,54 +1,74 @@
-# Anjungan Selaras — versi publik (GitHub Pages)
+# Kalender Kerja BHP Medan — versi publik (GitHub Pages)
 
-Halaman ini adalah versi mandiri dari `kalender-ai/index.html`: bisa dibuka
-siapa saja lewat tautan biasa, tanpa masuk akun apa pun.
+Halaman mandiri yang bisa dibuka siapa saja lewat tautan biasa, tanpa masuk akun.
 
 - `index.html` — seluruh aplikasi
-- `vendor/mqtt.min.js` — klien MQTT (untuk sinkronisasi ruang tim)
+- `img/pengayoman.png` — lambang Pengayoman, diambil dari kop surat resmi BHP Medan
+- `vendor/mqtt.min.js` — klien MQTT untuk sinkronisasi ruang tim
 - `vendor/anthropic.min.js` — SDK Anthropic resmi, dipaket untuk peramban
 
-Keduanya ikut disimpan di repo supaya halaman tidak bergantung pada CDN mana pun.
+Pustaka ikut disimpan di repo supaya halaman tidak bergantung pada CDN mana pun.
+
+## Tampilan
+
+Satu dunia visual: **terang saja**, tanpa mode gelap. Warna diambil dari lambang
+Pengayoman pada kop surat (navy `#021932`, emas `#E6E005`) lalu dilunakkan untuk
+layar: kop navy dengan garis emas, kartu putih, dan latar abu kebiruan.
+Huruf Plus Jakarta Sans untuk antarmuka, Lora untuk nama instansi.
+
+Kendali yang jarang dipakai — ruang tim, nama, co-pilot, ekspor — dipindahkan ke
+satu menu titik tiga di kop, sehingga bilah alat hanya menyisakan navigasi
+tanggal, pemilih tampilan, dan tombol tambah acara. Tidak ada fitur yang hilang.
 
 ## Menyalakan GitHub Pages
 
 Setelan repositori → **Pages** → *Source*: **Deploy from a branch** →
-pilih cabang tempat berkas ini berada, folder **/docs** → **Save**.
-Alamatnya akan menjadi:
+pilih cabang tempat berkas ini berada, folder **/docs** → **Save**. Alamatnya:
 
 ```
 https://shelanatasha-bhpmedan.github.io/Try-Out-UKOM-JFKK-Level-Madya-By-Shela-BHPMedan/
 ```
 
+## Agenda bawaan
+
+Kunjungan pertama memuat agenda Jumat, 13 November 2026 — Rapat Monitoring
+Lanjutan Pengampuan a.n. Sdri. Ariel Ruth Agustin Aritonang — beserta pengingat
+konfirmasi, persiapan ruang Zoom, dan penyusunan notula. Sumbernya surat undangan
+BHP Medan tertanggal 9 November 2026 (nomor 3688–3691). Agenda ini hanya dimuat
+sekali, lalu tersimpan di perangkat; menghapusnya dari aplikasi bersifat permanen
+untuk perangkat itu.
+
+Isinya memuat nama para pihak dan data rapat. Halaman ini publik, jadi perlakukan
+repositori ini sebagai ruang publik juga.
+
 ## Cara kerja ruang tim
 
-Acara dan obrolan selalu tersimpan di perangkat (localStorage). Bila sebuah
-**kode ruang** diisi, isi kalender juga disiarkan lewat relay MQTT publik:
+Acara dan obrolan selalu tersimpan di perangkat. Bila sebuah **kode ruang** diisi,
+isi kalender juga disiarkan lewat relay MQTT publik:
 
 1. Kunci AES-GCM 256-bit diturunkan dari kode ruang dengan PBKDF2
    (150.000 iterasi, SHA-256).
 2. Nama topik adalah ringkasan SHA-256 dari kode ruang, bukan kodenya.
-3. Setiap paket disegel di perangkat sebelum dikirim, jadi relay hanya
-   melihat sandi acak.
+3. Setiap paket disegel di perangkat sebelum dikirim, jadi relay hanya melihat
+   sandi acak.
 
 Penggabungan antar perangkat memakai aturan *tulisan terbaru menang* per acara
-(`updatedAt`), dengan nisan penghapusan agar acara yang dihapus tidak hidup lagi.
-Keadaan terakhir dikirim sebagai pesan *retained*, sehingga yang bergabung
-belakangan langsung menerima kalender lengkap.
+(`updatedAt`), dengan nisan penghapusan. Keadaan terakhir dikirim sebagai pesan
+*retained*, sehingga yang bergabung belakangan langsung menerima kalender lengkap.
 
-**Batas yang perlu diketahui:** siapa pun yang memegang kode ruang atau tautan
-undangannya bisa membaca dan mengubah kalender. Perlakukan seperti kata sandi
-bersama, dan pilih kode yang tidak mudah ditebak.
+Siapa pun yang memegang kode ruang atau tautan undangannya bisa membaca dan
+mengubah kalender — perlakukan seperti kata sandi bersama.
 
 ## Co-pilot AI
 
-Versi publik memakai kunci API Anthropic milik pemakai sendiri (tombol
-**Aktifkan co-pilot**). Kunci hanya disimpan di peramban itu dan dikirim
-langsung ke Anthropic — tidak pernah lewat relay tim. Untuk co-pilot tanpa
-kunci, gunakan versi Artifact di `kalender-ai/index.html`.
+Memakai kunci API Anthropic milik pemakai sendiri (menu → **Co-pilot AI**). Kunci
+hanya disimpan di peramban itu dan dikirim langsung ke Anthropic, tidak pernah
+lewat relay tim.
 
 ## Status pengujian
 
-Sinkronisasi diuji dengan broker MQTT lokal dan dua peramban: kehadiran,
-pembuatan acara, obrolan, dan penghapusan semuanya menyeberang antar sesi.
-Relay publik (EMQX, Mosquitto) belum bisa diuji dari lingkungan pengembangan
-karena jaringan keluarnya dibatasi.
+Sinkronisasi diuji dengan broker MQTT lokal dan dua peramban: kehadiran, acara
+baru, obrolan, dan penghapusan menyeberang antar sesi. Tampilan bulan, minggu,
+agenda, editor acara, dan layar 400px diperiksa langsung. Relay publik (EMQX,
+Mosquitto) belum bisa diuji dari lingkungan pengembangan karena jaringan keluarnya
+dibatasi.
