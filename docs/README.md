@@ -31,12 +31,19 @@ https://shelanatasha-bhpmedan.github.io/Try-Out-UKOM-JFKK-Level-Madya-By-Shela-B
 
 ## Agenda bawaan
 
-Kunjungan pertama memuat agenda Jumat, 13 November 2026 — Rapat Monitoring
-Lanjutan Pengampuan a.n. Sdri. Ariel Ruth Agustin Aritonang — beserta pengingat
-konfirmasi, persiapan ruang Zoom, dan penyusunan notula. Sumbernya surat undangan
-BHP Medan tertanggal 9 November 2026 (nomor 3688–3691). Agenda ini hanya dimuat
-sekali, lalu tersimpan di perangkat; menghapusnya dari aplikasi bersifat permanen
-untuk perangkat itu.
+Aplikasi memuat agenda resmi yang belum ada di perangkat:
+
+- **Jumat, 13 November 2026** — Rapat Monitoring Lanjutan Pengampuan a.n. Sdri.
+  Ariel Ruth Agustin Aritonang, beserta pengingat konfirmasi, persiapan ruang
+  Zoom, dan penyusunan notula. Sumber: surat undangan BHP Medan 9 November 2026
+  (nomor 3688–3691).
+- **Rabu, 18 November 2026** — Monitoring Pengampuan atas Terampu Sorialam
+  Sitorus di Ruang Rapat Kantor BHP Medan. Sumber: Laporan Monitoring Pengampuan
+  18 November 2026 (Revisi 2). Laporan tidak mencantumkan jam, jadi jam di
+  kalender adalah perkiraan.
+
+Acara yang sudah pernah dimuat tidak digandakan, dan acara yang dihapus dari
+aplikasi tidak dihidupkan lagi pada kunjungan berikutnya.
 
 Isinya memuat nama para pihak dan data rapat. Halaman ini publik, jadi perlakukan
 repositori ini sebagai ruang publik juga.

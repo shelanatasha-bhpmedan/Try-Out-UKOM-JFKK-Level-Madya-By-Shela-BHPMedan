@@ -627,6 +627,45 @@ function jadwalContoh(){
       ].join("\n")
     },
     {
+      id:"bhp_20261118_sorialam", date:"2026-11-18", start:"10:00", end:"11:30",
+      title:"Monitoring Pengampuan — Terampu Sorialam Sitorus",
+      cat:"rapat", priority:"tinggi", owner:"Syuhada",
+      attendees:["Syuhada","Elsintha Damayanti","Shela Natasha","Andre Yosua Surbakti","Annisa Dwi Marina","Ivana Christie Elizabeth"],
+      notes:[
+        "Monitoring langsung di Ruang Rapat Kantor BHP Medan, Jl. Listrik No. 10 Medan.",
+        "Atas inisiatif pengampu yang datang sendiri, tidak didahului pemberitahuan dan penjadwalan e-Monitoring.",
+        "",
+        "PARA PIHAK",
+        "• Terampu: Sorialam Sitorus (lahir di Porsea, 19 Juni 1951)",
+        "• Pengampu: Ivana Christie Elizabeth, S.E. — 0812-2842-5933",
+        "• Penanggung jawab: Syuhada, S.H., M.Hum. — Kurator Keperdataan Ahli Madya",
+        "• Tim: Elsintha Damayanti (Kasi HP Wilayah II), Shela Natasha (JFKK Muda), Andre Yosua Surbakti, Annisa Dwi Marina",
+        "",
+        "DASAR",
+        "• Penetapan Pengadilan Negeri Medan No. 249/Pdt.P/2026/PN Mdn, 11 Maret 2026",
+        "• BA Penghadapan W.2.AHU.AHU.1-AH.06.03-3107 dan BA Penyumpahan -3108, 28 September 2026",
+        "• BA Pencatatan Harta Kekayaan W.2.AHU.AHU.1-AH.06.03-3109, 3 Agustus 2026",
+        "• KUHPerdata Pasal 433–462; BHP selaku pengampu pengawas (toeziende curator), Pasal 449",
+        "",
+        "KETERANGAN PENGAMPU",
+        "• Sdr. Christanto Sitorus datang ke Medan dan kini tinggal di rumah Terampu.",
+        "• Beda pandangan soal rumah kediaman; pengampu berpendapat rumah tetap milik Terampu karena Terampu masih hidup.",
+        "• Pengampu kembali tinggal di rumahnya sendiri dan tidak dapat masuk ke rumah Terampu karena gembok pagar diganti.",
+        "• Supir tidak lagi bekerja dan perawat berhenti — kesinambungan perawatan jadi kekhawatiran utama.",
+        "• Ada kesalahpahaman kecil yang melibatkan anak-anak dalam keluarga.",
+        "• Tidak terdapat penjualan aset milik Terampu sampai saat ini.",
+        "",
+        "HASIL",
+        "Tidak ditemukan indikasi penyalahgunaan kewenangan pengampu maupun tindakan yang merugikan hak dan kepentingan Terampu.",
+        "",
+        "TINDAK LANJUT",
+        "Keterangan dicatat dalam laporan monitoring dan disampaikan kepada pengampu melalui WhatsApp; laporan disampaikan ke Ditjen AHU.",
+        "Berita Acara Monitoring Pengampu: W2.AHU.AHU.1.AH.06.02- (nomor menyusul).",
+        "",
+        "Catatan: laporan tidak mencantumkan jam kegiatan, jadi jam di kalender ini perkiraan — silakan sesuaikan."
+      ].join("\n")
+    },
+    {
       id:"bhp_20261113_notula", date:"2026-11-13", start:"13:00", end:"14:30",
       title:"Susun notula & bahan rekomendasi Pengampu Pengganti",
       cat:"fokus", priority:"normal", owner:"BHP Medan", attendees:[],
@@ -1876,16 +1915,19 @@ const cocokTautan = location.hash.match(/[#&]r=([^&]*)/);
 const ruangAwal = cocokTautan ? decodeURIComponent(cocokTautan[1]) : (bacaLokal("bhpkal.room", "") || "");
 
 muatData();
-if (!Object.keys(store.events).length && !ruangAwal){
-  /* Kunjungan pertama: muat agenda yang sudah tercatat, lalu mendarat di
-     tanggalnya supaya tampilan agenda tidak terbuka kosong bila tanggal itu
-     sudah lewat. */
-  const awal = jadwalContoh();
-  awal.forEach(e => { store.events[e.id] = Object.assign({}, e, {updatedAt: Date.now()}); });
-  simpanData();
-  const paling = awal.map(e => e.date).sort()[0];
-  if (paling && paling < HARI_INI) state.anchor = fromIso(paling);
-  terapkan();
+if (!ruangAwal){
+  /* Agenda resmi yang belum pernah ada di perangkat ini ikut dimuat. Acara yang
+     pernah dihapus meninggalkan nisan, jadi tidak pernah hidup lagi. */
+  const awal = jadwalContoh().filter(e => !(e.id in store.events));
+  if (awal.length){
+    awal.forEach(e => { store.events[e.id] = Object.assign({}, e, {updatedAt: Date.now()}); });
+    simpanData();
+    /* Mendarat di agenda terlama hanya bila tidak ada satu pun yang masih akan datang,
+       supaya tampilan agenda tidak terbuka kosong. */
+    const tanggal = awal.map(e => e.date).sort();
+    if (!tanggal.some(d => d >= HARI_INI)) state.anchor = fromIso(tanggal[0]);
+    terapkan();
+  }
 }
 susunPeers();
 perbaruiTombolSaya();
