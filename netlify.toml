@@ -1,0 +1,3 @@
+# Terbitkan folder docs/ apa adanya — tidak ada tahap build.
+[build]
+  publish = "docs"
