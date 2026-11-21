@@ -410,6 +410,8 @@ button{cursor:pointer;background:none;border:0}
   background:var(--surface);border-radius:10px;padding:10px 12px;
 }
 .doc-actions label{font-size:12px;font-weight:600;color:var(--ink-2)}
+.zoom-grp{display:flex;align-items:center;gap:6px}
+.zoom-grp span{font-size:12px;font-weight:600;min-width:40px;text-align:center;font-variant-numeric:tabular-nums}
 .doc-actions input[type="date"]{height:32px;border:1px solid var(--line);border-radius:8px;padding:0 9px;font-size:12.5px}
 .doc{
   background:#fff;color:#111;padding:28px 32px 36px;border-radius:4px;
@@ -430,8 +432,18 @@ button{cursor:pointer;background:none;border:0}
 .doc th{background:#EEF1F7;font-size:10.5px;text-align:center}
 .doc td.tengah{text-align:center;white-space:nowrap}
 .doc .pihak{font-size:10px;color:#333}
-.doc .pj-input{width:100%;border:0;border-bottom:1px dotted #777;font:inherit;padding:3px 0;outline:none;background:none}
-.doc .pj-input:focus{border-bottom-color:#1F4274}
+.doc .pj-input{
+  width:100%;border:1px solid #C3CAD8;border-radius:3px;background:#FBFCFE;
+  font:inherit;font-size:10.5px;padding:4px 20px 4px 6px;outline:none;
+}
+.doc .pj-input:focus{border-color:#1F4274;background:#fff}
+.doc .pj-sel{position:relative}
+.doc .pj-sel::after{
+  content:"";position:absolute;right:7px;top:50%;width:0;height:0;margin-top:-1px;
+  border-left:3.5px solid transparent;border-right:3.5px solid transparent;border-top:4px solid #5B78A8;
+  pointer-events:none;
+}
+.doc td.paraf{height:48px}
 .doc .ttd{margin-top:28px;display:flex;justify-content:flex-end}
 .doc .ttd-in{width:290px;text-align:center;font-size:11.5px}
 .doc .ttd-cap{margin:18px 0 22px;font-size:11.5px}
@@ -448,6 +460,10 @@ button{cursor:pointer;background:none;border:0}
   .doc{box-shadow:none;border-radius:0;padding:0}
   .doc tr{break-inside:avoid}
   .doc .pj-input::-webkit-calendar-picker-indicator{display:none}
+  .doc .pj-input{border:0;border-bottom:1px dotted #555;border-radius:0;background:none;padding:2px 0;font-size:10px}
+  .doc .pj-input::placeholder{color:transparent}
+  .doc .pj-sel::after{display:none}
+  .doc{zoom:1 !important}
   @page{size:A4 portrait;margin:14mm}
 }
 
@@ -1996,9 +2012,10 @@ function htmlLembarPJ(dari, sampai){
           + (pihak ? '<div class="pihak">Pihak terkait: '+esc(pihak)+'</div>' : "")
           + '</td>'
           + '<td>'+esc(tempatDari(e))+'</td>'
-          + '<td><input class="pj-input" list="tim-bhp" autocomplete="off" aria-label="Penanggung jawab kegiatan nomor '+(i+1)+'"></td></tr>';
+          + '<td class="pj-sel"><input class="pj-input" list="tim-bhp" autocomplete="off" placeholder="pilih atau ketik" aria-label="Penanggung jawab kegiatan nomor '+(i+1)+'"></td>'
+          + '<td class="paraf"></td></tr>';
       }).join("")
-    : '<tr><td colspan="6" class="tengah" style="padding:16px">Tidak ada kegiatan pada rentang tanggal ini.</td></tr>';
+    : '<tr><td colspan="7" class="tengah" style="padding:16px">Tidak ada kegiatan pada rentang tanggal ini.</td></tr>';
 
   return ''
     + '<div class="kop">'
@@ -2015,7 +2032,8 @@ function htmlLembarPJ(dari, sampai){
     + '<p class="doc-periode">Periode '+esc(labelRentang(dari, sampai))+'</p>'
     + '<table><thead><tr>'
     + '<th style="width:26px">No</th><th style="width:84px">Hari / Tanggal</th><th style="width:66px">Waktu</th>'
-    + '<th>Kegiatan</th><th style="width:118px">Tempat / Media</th><th style="width:150px">Penanggung Jawab</th>'
+    + '<th>Kegiatan</th><th style="width:106px">Tempat / Media</th>'
+    + '<th style="width:152px">Penanggung Jawab</th><th style="width:60px">Tanda Tangan</th>'
     + '</tr></thead><tbody>'+baris+'</tbody></table>'
     + '<datalist id="tim-bhp">'+TIM_BHP.map(n => '<option value="'+esc(n)+'"></option>').join("")+'</datalist>'
     + '<div class="catatan"><b>Catatan</b>'
@@ -2039,6 +2057,11 @@ function bukaLembarPJ(){
     + '<label for="pj-dari">Dari</label><input type="date" id="pj-dari" value="'+iso(a)+'">'
     + '<label for="pj-sampai">Sampai</label><input type="date" id="pj-sampai" value="'+iso(b)+'">'
     + '<span class="spacer"></span>'
+    + '<div class="zoom-grp">'
+    + '<button type="button" class="icon-btn" id="pj-kecil" aria-label="Perkecil tampilan">−</button>'
+    + '<span id="pj-zoom-label">100%</span>'
+    + '<button type="button" class="icon-btn" id="pj-besar" aria-label="Perbesar tampilan">+</button>'
+    + '</div>'
     + '<button type="button" class="ghost-btn" id="pj-tutup">Tutup</button>'
     + '<button type="button" class="primary-btn" id="pj-cetak">Cetak / Simpan PDF</button>'
     + '</div><div class="doc" id="pj-doc"></div></div>';
@@ -2051,6 +2074,14 @@ function bukaLembarPJ(){
   veil.querySelector("#pj-dari").onchange = gambarDoc;
   veil.querySelector("#pj-sampai").onchange = gambarDoc;
   const tutup = () => { veil.remove(); document.removeEventListener("keydown", escLembar); };
+  let zoom = 100;
+  const pasangZoom = v => {
+    zoom = Math.min(200, Math.max(60, v));
+    document.getElementById("pj-doc").style.zoom = zoom / 100;
+    document.getElementById("pj-zoom-label").textContent = zoom + "%";
+  };
+  veil.querySelector("#pj-kecil").onclick = () => pasangZoom(zoom - 10);
+  veil.querySelector("#pj-besar").onclick = () => pasangZoom(zoom + 10);
   veil.querySelector("#pj-tutup").onclick = tutup;
   veil.querySelector("#pj-cetak").onclick = () => window.print();
   veil.onclick = e => { if (e.target === veil) tutup(); };
