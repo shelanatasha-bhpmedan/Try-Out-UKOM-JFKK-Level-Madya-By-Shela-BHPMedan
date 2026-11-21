@@ -434,8 +434,9 @@ button{cursor:pointer;background:none;border:0}
 .doc .pj-input:focus{border-bottom-color:#1F4274}
 .doc .ttd{margin-top:28px;display:flex;justify-content:flex-end}
 .doc .ttd-in{width:290px;text-align:center;font-size:11.5px}
-.doc .ttd-gap{height:64px}
+.doc .ttd-cap{margin:18px 0 22px;font-size:11.5px}
 .doc .ttd-nama{font-weight:700;text-decoration:underline}
+.doc .ttd-nip{margin-top:2px}
 .doc .catatan{margin-top:16px;font-size:10.5px;line-height:1.55}
 .doc .catatan b{display:block;margin-bottom:2px}
 
@@ -1958,6 +1959,7 @@ const TIM_BHP = [
   "Andre Yosua Surbakti, S.E.",
   "Annisa Dwi Marina, S.E."
 ];
+
 const KASI_WILAYAH_II = { nama:"Elsintha Damayanti, S.H.", nip:"197105051992032001" };
 
 const tglPendek = d => { const x = fromIso(d); return x.getDate()+" "+BULAN[x.getMonth()].slice(0,3)+" "+x.getFullYear(); };
@@ -2010,7 +2012,6 @@ function htmlLembarPJ(dari, sampai){
     + '<hr class="garis">'
     + '<h1>LEMBAR PENETAPAN PENANGGUNG JAWAB KEGIATAN</h1>'
     + '<p class="doc-sub">Seksi Harta Peninggalan Wilayah II</p>'
-    + '<p class="doc-nomor">Nomor: ................................................</p>'
     + '<p class="doc-periode">Periode '+esc(labelRentang(dari, sampai))+'</p>'
     + '<table><thead><tr>'
     + '<th style="width:26px">No</th><th style="width:84px">Hari / Tanggal</th><th style="width:66px">Waktu</th>'
@@ -2023,8 +2024,9 @@ function htmlLembarPJ(dari, sampai){
     + 'serta menyusun laporan kegiatan setelahnya.</div>'
     + '<div class="ttd"><div class="ttd-in">'
     + 'Medan, ................................ 2026<br>Kepala Seksi Harta Peninggalan Wilayah II,'
-    + '<div class="ttd-gap"></div>'
-    + '<span class="ttd-nama">'+esc(KASI_WILAYAH_II.nama)+'</span><br>NIP. '+esc(KASI_WILAYAH_II.nip)
+    + '<div class="ttd-cap">ttd.</div>'
+    + '<div class="ttd-nama">'+esc(KASI_WILAYAH_II.nama)+'</div>'
+    + '<div class="ttd-nip">NIP. '+esc(KASI_WILAYAH_II.nip)+'</div>'
     + '</div></div>';
 }
 
