@@ -402,6 +402,54 @@ button{cursor:pointer;background:none;border:0}
   *{animation-duration:.001ms !important;animation-iteration-count:1 !important;transition-duration:.001ms !important}
 }
 
+/* ---------- lembar penanggung jawab ---------- */
+.doc-veil{position:fixed;inset:0;z-index:90;background:rgba(2,25,50,.45);overflow-y:auto;padding:18px}
+.doc-wrap{max-width:880px;margin:0 auto}
+.doc-actions{
+  display:flex;flex-wrap:wrap;gap:9px;align-items:center;margin-bottom:12px;
+  background:var(--surface);border-radius:10px;padding:10px 12px;
+}
+.doc-actions label{font-size:12px;font-weight:600;color:var(--ink-2)}
+.doc-actions input[type="date"]{height:32px;border:1px solid var(--line);border-radius:8px;padding:0 9px;font-size:12.5px}
+.doc{
+  background:#fff;color:#111;padding:28px 32px 36px;border-radius:4px;
+  box-shadow:0 22px 54px -20px rgba(2,25,50,.55);font-size:12px;line-height:1.5;
+}
+.doc .kop{display:flex;align-items:center;gap:14px;justify-content:center;text-align:center}
+.doc .kop img{width:60px;height:68px;object-fit:contain;flex:0 0 auto}
+.doc .kop b{font-size:13.5px}
+.doc .kop p{margin:0;line-height:1.35}
+.doc .kop .kecil{font-size:10.5px}
+.doc .garis{border:0;border-top:1.5px solid #111;margin:9px 0 18px}
+.doc h1{font-size:13.5px;text-align:center;margin:0;letter-spacing:.02em;text-decoration:underline}
+.doc .doc-sub{text-align:center;margin:4px 0 0;font-size:12.5px;font-weight:700}
+.doc .doc-nomor{text-align:center;margin:2px 0 0;font-size:11px}
+.doc .doc-periode{text-align:center;margin:2px 0 18px;font-size:11.5px}
+.doc table{width:100%;border-collapse:collapse;font-size:11px}
+.doc th,.doc td{border:1px solid #111;padding:5px 6px;vertical-align:top}
+.doc th{background:#EEF1F7;font-size:10.5px;text-align:center}
+.doc td.tengah{text-align:center;white-space:nowrap}
+.doc .pihak{font-size:10px;color:#333}
+.doc .pj-input{width:100%;border:0;border-bottom:1px dotted #777;font:inherit;padding:3px 0;outline:none;background:none}
+.doc .pj-input:focus{border-bottom-color:#1F4274}
+.doc .ttd{margin-top:28px;display:flex;justify-content:flex-end}
+.doc .ttd-in{width:290px;text-align:center;font-size:11.5px}
+.doc .ttd-gap{height:64px}
+.doc .ttd-nama{font-weight:700;text-decoration:underline}
+.doc .catatan{margin-top:16px;font-size:10.5px;line-height:1.55}
+.doc .catatan b{display:block;margin-bottom:2px}
+
+@media print{
+  body > *:not(.doc-veil){display:none !important}
+  .doc-veil{position:static;background:none;padding:0;overflow:visible}
+  .doc-wrap{max-width:none}
+  .doc-actions{display:none !important}
+  .doc{box-shadow:none;border-radius:0;padding:0}
+  .doc tr{break-inside:avoid}
+  .doc .pj-input::-webkit-calendar-picker-indicator{display:none}
+  @page{size:A4 portrait;margin:14mm}
+}
+
 /* ---------- responsif ---------- */
 @media (max-width:1080px){
   .stage{grid-template-columns:minmax(0,1fr)}
@@ -459,6 +507,7 @@ button{cursor:pointer;background:none;border:0}
         <button type="button" id="me-btn" role="menuitem"><span>Nama saya</span><small id="me-state">Belum diatur</small></button>
         <button type="button" id="ai-key" role="menuitem"><span>Co-pilot AI</span><small id="ai-state">Belum aktif</small></button>
         <div class="menu-sep"></div>
+        <button type="button" id="lembar-pj" role="menuitem"><span>Lembar penanggung jawab</span><small>dokumen cetak untuk Kasi</small></button>
         <button type="button" id="export" role="menuitem"><span>Ekspor .ics</span><small>unduh ke perangkat</small></button>
       </div>
     </div>
@@ -595,7 +644,7 @@ function jadwalContoh(){
       notes:"Buka ruang lebih awal, uji audio dan tayangan, siapkan daftar hadir serta berkas hasil musyawarah keluarga.\n\n" + zoom
     },
     {
-      id:"bhp_20261113_rapat", date:"2026-11-13", start:"10:00", end:"12:00",
+      id:"bhp_20261113_rapat", date:"2026-11-13", start:"10:00", end:"12:00", tempat:"Daring — Zoom Meeting",
       title:"Rapat Monitoring Lanjutan Pengampuan — Sdri. Ariel Ruth Agustin Aritonang",
       cat:"rapat", priority:"tinggi", owner:"BHP Medan",
       attendees:["Vera Minar Siagian","Jurnalita Pangaribuan","Janter Jameston Pangaribuan","Nora Sarmila Dewi Panjaitan"],
@@ -627,7 +676,80 @@ function jadwalContoh(){
       ].join("\n")
     },
     {
-      id:"bhp_20261118_sorialam", date:"2026-11-18", start:"10:00", end:"11:30",
+      id:"bhp_20261123_penyumpahan_dian", date:"2026-11-23", start:"09:00", end:"10:00", tempat:"Kantor BHP Medan",
+      title:"Penyumpahan Wali — Dian Fesa Silitonga",
+      cat:"rapat", priority:"tinggi", owner:"Syuhada", wilayah:"II",
+      attendees:["Syuhada","Dian Fesa Silitonga"],
+      notes:[
+        "Penyumpahan wali di hadapan Balai Harta Peninggalan Medan selaku Wali Pengawas.",
+        "Jam masih perkiraan — dokumen hanya mencantumkan hari dan tanggal.",
+        "",
+        "PARA PIHAK",
+        "• Wali: Dian Fesa Silitonga (bibi anak), lahir Parlilitan 20 Desember 1991, wiraswasta, Pematangsiantar",
+        "• Anak di bawah umur: Purnama Clara Margareth Purba, lahir 6 Agustus 2014",
+        "• Kurator Keperdataan Ahli Madya: Syuhada, NIP 196706121989031001",
+        "• Saksi: Renti Lumbanbatu dan Nurita Silitonga, S.E.",
+        "",
+        "DASAR",
+        "Penetapan Pengadilan Negeri Pematangsiantar Nomor 153/Pdt.P/2026/PN Pms tanggal 10 Agustus 2026.",
+        "Berita Acara Penghadapan Nomor W.2.AHU.AHU.1-AH.06.02- (nomor menyusul).",
+        "",
+        "MAKSUD PERWALIAN",
+        "Pengambilan dana BPJS Ketenagakerjaan atas nama Almarhumah Rina Gokasi Silitonga (ibu kandung anak) di BPJS Ketenagakerjaan Cabang Pematangsiantar, Kartu Peserta Nomor 1271436702830006.",
+        "",
+        "Seksi Harta Peninggalan Wilayah II."
+      ].join("\n")
+    },
+    {
+      id:"bhp_20261123_mahasiswa", date:"2026-11-23", start:"10:00", end:"11:30", tempat:"Menyesuaikan undangan",
+      title:"(Tentatif) Diskusi mahasiswa — hibah dan peran BHP",
+      cat:"fokus", priority:"normal", owner:"BHP Medan", attendees:[],
+      notes:"Rencana diskusi dengan mahasiswa mengenai hibah dan keterkaitannya dengan peran Balai Harta Peninggalan.\n\nSTATUS: KEMUNGKINAN — undangan belum diterima. Blok waktu ini disiapkan untuk berjaga-jaga; hapus bila undangan tidak jadi datang."
+    },
+    {
+      id:"bhp_20261123_monitoring_virgina", date:"2026-11-23", start:"14:00", end:"15:00", tempat:"Daring — Zoom Meeting",
+      title:"Rapat Monitoring Pengampuan — Virgina Sari Septianie",
+      cat:"rapat", priority:"tinggi", owner:"BHP Medan", wilayah:"II",
+      attendees:["Virgina Sari Septianie"],
+      notes:[
+        "Acara: monitoring pengampuan atas diri dan harta terampu.",
+        "Tempat: daring melalui Zoom Meeting, pukul 14.00 WIB s.d. selesai.",
+        "Tautan Zoom: https://us06web.zoom.us/j/3208006444",
+        "ID Rapat: 320 800 6444 — Password: bhpmedan",
+        "",
+        "PARA PIHAK",
+        "• Pengampu: Virgina Sari Septianie",
+        "• Terampu: Ibu Soemarni Soebrantas",
+        "",
+        "DASAR",
+        "Penetapan Pengadilan Negeri Pekanbaru Nomor 241/Pdt.P/2023/PN Pbr tanggal 7 November 2023.",
+        "Surat undangan BHP Medan Nomor W.2.AHU.AHU.1-AH.06.03-3819 tanggal 20 November 2026, ditandatangani Kepala BHP Medan (Syafriadi Lubis). Tembusan: Direktur Jenderal Administrasi Hukum Umum.",
+        "Monitoring dilaksanakan secara daring atas permintaan.",
+        "",
+        "Seksi Harta Peninggalan Wilayah II.",
+        "Catatan: jam selesai masih perkiraan karena surat menyebut \"s.d. selesai\". Perhatikan geladi bersih webinar pukul 15.00 di hari yang sama."
+      ].join("\n")
+    },
+    {
+      id:"bhp_20261123_geladi", date:"2026-11-23", start:"15:00", end:"16:30", tempat:"Daring — kanal webinar",
+      title:"Geladi bersih webinar",
+      cat:"fokus", priority:"tinggi", owner:"BHP Medan", attendees:[],
+      notes:"Persiapan akhir webinar 24 November 2026: uji tayang materi, uji audio, pembagian peran moderator dan narasumber, serta penelusuran alur acara."
+    },
+    {
+      id:"bhp_20261124_webinar", date:"2026-11-24", start:"09:00", end:"11:00", tempat:"Daring — webinar",
+      title:"Webinar",
+      cat:"rapat", priority:"tinggi", owner:"BHP Medan", attendees:[],
+      notes:"Jam masih perkiraan — belum ditentukan. Sesuaikan setelah rundown final.\n\nGeladi bersih dilaksanakan Senin, 23 November 2026 pukul 15.00."
+    },
+    {
+      id:"bhp_20261125_helmina", date:"2026-11-25", start:"09:00", end:"10:00", tempat:"Kantor BHP Medan",
+      title:"Helmina diundang ke Kantor BHP Medan",
+      cat:"rapat", priority:"normal", owner:"BHP Medan", attendees:["Helmina"],
+      notes:"Undangan kehadiran ke Kantor Balai Harta Peninggalan Medan, Jl. Listrik No. 10 Medan, pukul 09.00 WIB.\n\nAgenda pertemuan belum dirinci — lengkapi sebelum surat undangan dikirim."
+    },
+    {
+      id:"bhp_20261118_sorialam", date:"2026-11-18", start:"10:00", end:"11:30", tempat:"Ruang Rapat BHP Medan",
       title:"Monitoring Pengampuan — Terampu Sorialam Sitorus",
       cat:"rapat", priority:"tinggi", owner:"Syuhada",
       attendees:["Syuhada","Elsintha Damayanti","Shela Natasha","Andre Yosua Surbakti","Annisa Dwi Marina","Ivana Christie Elizabeth"],
@@ -1691,6 +1813,8 @@ function bukaEditor(ev, tanggal, jam, jamSelesai){
     + '<div class="inp"><label for="ed-att">Peserta <span style="text-transform:none;letter-spacing:0">(pisahkan dengan koma)</span></label>'
     + '<input id="ed-att" value="'+esc((data.attendees||[]).join(", "))+'" placeholder="Tulis nama, pisahkan dengan koma" list="daftar-anggota"></div>'
     + '<datalist id="daftar-anggota">'+anggotaDikenal().map(n => '<option value="'+esc(n)+'"></option>').join("")+'</datalist>'
+    + '<div class="inp"><label for="ed-tempat">Tempat / media</label>'
+    + '<input id="ed-tempat" value="'+esc(data.tempat||"")+'" placeholder="mis. Kantor BHP Medan atau Daring — Zoom Meeting"></div>'
     + '<div class="inp"><label for="ed-notes">Catatan & agenda</label><textarea id="ed-notes" placeholder="Poin bahasan, berkas yang perlu dibawa…">'+esc(data.notes||"")+'</textarea></div>'
     + '<div class="sheet-foot">'
     + (baru ? "" : '<button type="button" class="danger-btn" id="ed-del">Hapus acara</button>')
@@ -1727,6 +1851,7 @@ function bukaEditor(ev, tanggal, jam, jamSelesai){
       priority: document.getElementById("ed-prio").value,
       attendees: document.getElementById("ed-att").value.split(",").map(s => s.trim()).filter(Boolean).slice(0,15),
       notes: document.getElementById("ed-notes").value.slice(0,2000),
+      tempat: (document.getElementById("ed-tempat").value || "").trim().slice(0,120),
       owner: data.owner || state.saya.nama || "Tamu"
     };
     const ok = await simpanEvent(ev2);
@@ -1820,6 +1945,119 @@ function eksporIcs(){
 }
 
 /* ============================================================
+   9b. Lembar penetapan penanggung jawab kegiatan
+
+   Dokumen cetak berkop resmi yang disusun dari isi kalender.
+   Kolom penanggung jawab sengaja dikosongkan: Kepala Seksi yang
+   menetapkan, boleh diketik di layar lebih dulu atau ditulis tangan.
+   ============================================================ */
+const TIM_BHP = [
+  "Syuhada, S.H., M.Hum.",
+  "Elsintha Damayanti, S.H.",
+  "Shela Natasha, S.H.",
+  "Andre Yosua Surbakti, S.E.",
+  "Annisa Dwi Marina, S.E."
+];
+const KASI_WILAYAH_II = { nama:"Elsintha Damayanti, S.H.", nip:"197105051992032001" };
+
+const tglPendek = d => { const x = fromIso(d); return x.getDate()+" "+BULAN[x.getMonth()].slice(0,3)+" "+x.getFullYear(); };
+
+function tempatDari(ev){
+  if (ev.tempat) return ev.tempat;
+  const t = ((ev.notes||"") + " " + (ev.title||"")).toLowerCase();
+  if (t.includes("zoom")) return "Daring — Zoom Meeting";
+  if (t.includes("webinar")) return "Daring — webinar";
+  if (t.includes("ruang rapat")) return "Ruang Rapat BHP Medan";
+  if (t.includes("kantor balai harta peninggalan medan") || t.includes("kantor bhp")) return "Kantor BHP Medan";
+  return "—";
+}
+
+function labelRentang(dari, sampai){
+  if (!dari || !sampai) return "";
+  const a = fromIso(dari), b = fromIso(sampai);
+  if (dari === sampai) return tanggalPanjang(dari);
+  if (a.getMonth() === b.getMonth() && a.getFullYear() === b.getFullYear())
+    return a.getDate()+" – "+b.getDate()+" "+BULAN[b.getMonth()]+" "+b.getFullYear();
+  return tglPendek(dari)+" – "+tglPendek(sampai);
+}
+
+function htmlLembarPJ(dari, sampai){
+  const logo = (document.querySelector(".mark") || {}).src || "";
+  const daftar = eventTampil().filter(e => e.date >= dari && e.date <= sampai);
+  const baris = daftar.length
+    ? daftar.map((e, i) => {
+        const pihak = [...new Set((e.attendees||[]).filter(Boolean))].join(", ");
+        return '<tr><td class="tengah">'+(i+1)+'</td>'
+          + '<td class="tengah">'+esc(HARI[fromIso(e.date).getDay()])+'<br>'+esc(tglPendek(e.date))+'</td>'
+          + '<td class="tengah">'+esc(e.start)+'<br>s.d. '+esc(e.end)+'</td>'
+          + '<td><b>'+esc(e.title)+'</b>'
+          + (pihak ? '<div class="pihak">Pihak terkait: '+esc(pihak)+'</div>' : "")
+          + '</td>'
+          + '<td>'+esc(tempatDari(e))+'</td>'
+          + '<td><input class="pj-input" list="tim-bhp" autocomplete="off" aria-label="Penanggung jawab kegiatan nomor '+(i+1)+'"></td></tr>';
+      }).join("")
+    : '<tr><td colspan="6" class="tengah" style="padding:16px">Tidak ada kegiatan pada rentang tanggal ini.</td></tr>';
+
+  return ''
+    + '<div class="kop">'
+    + (logo ? '<img src="'+esc(logo)+'" alt="Lambang Pengayoman">' : "")
+    + '<div><p>KEMENTERIAN HUKUM REPUBLIK INDONESIA</p>'
+    + '<p>KANTOR WILAYAH SUMATERA UTARA</p>'
+    + '<p><b>BALAI HARTA PENINGGALAN MEDAN</b></p>'
+    + '<p class="kecil">Jalan Listrik No. 10 Medan</p>'
+    + '<p class="kecil">Telepon: (061) 451 7830, Faksimile: (061) 451 4328</p>'
+    + '<p class="kecil">Laman: www.bhpmedan.kemenkum.go.id, Pos-el: bhp.medan@kemenkum.go.id</p></div></div>'
+    + '<hr class="garis">'
+    + '<h1>LEMBAR PENETAPAN PENANGGUNG JAWAB KEGIATAN</h1>'
+    + '<p class="doc-sub">Seksi Harta Peninggalan Wilayah II</p>'
+    + '<p class="doc-nomor">Nomor: ................................................</p>'
+    + '<p class="doc-periode">Periode '+esc(labelRentang(dari, sampai))+'</p>'
+    + '<table><thead><tr>'
+    + '<th style="width:26px">No</th><th style="width:84px">Hari / Tanggal</th><th style="width:66px">Waktu</th>'
+    + '<th>Kegiatan</th><th style="width:118px">Tempat / Media</th><th style="width:150px">Penanggung Jawab</th>'
+    + '</tr></thead><tbody>'+baris+'</tbody></table>'
+    + '<datalist id="tim-bhp">'+TIM_BHP.map(n => '<option value="'+esc(n)+'"></option>').join("")+'</datalist>'
+    + '<div class="catatan"><b>Catatan</b>'
+    + 'Kolom penanggung jawab diisi oleh Kepala Seksi Harta Peninggalan Wilayah II. '
+    + 'Penanggung jawab bertugas menyiapkan bahan, memastikan kehadiran pihak terkait, memimpin pelaksanaan, '
+    + 'serta menyusun laporan kegiatan setelahnya.</div>'
+    + '<div class="ttd"><div class="ttd-in">'
+    + 'Medan, ................................ 2026<br>Kepala Seksi Harta Peninggalan Wilayah II,'
+    + '<div class="ttd-gap"></div>'
+    + '<span class="ttd-nama">'+esc(KASI_WILAYAH_II.nama)+'</span><br>NIP. '+esc(KASI_WILAYAH_II.nip)
+    + '</div></div>';
+}
+
+function bukaLembarPJ(){
+  const [a, b] = rentangTampil();
+  const veil = document.createElement("div");
+  veil.className = "doc-veil"; veil.id = "doc-veil";
+  veil.innerHTML = '<div class="doc-wrap">'
+    + '<div class="doc-actions">'
+    + '<label for="pj-dari">Dari</label><input type="date" id="pj-dari" value="'+iso(a)+'">'
+    + '<label for="pj-sampai">Sampai</label><input type="date" id="pj-sampai" value="'+iso(b)+'">'
+    + '<span class="spacer"></span>'
+    + '<button type="button" class="ghost-btn" id="pj-tutup">Tutup</button>'
+    + '<button type="button" class="primary-btn" id="pj-cetak">Cetak / Simpan PDF</button>'
+    + '</div><div class="doc" id="pj-doc"></div></div>';
+  document.body.appendChild(veil);
+
+  const gambarDoc = () => {
+    document.getElementById("pj-doc").innerHTML = htmlLembarPJ(
+      document.getElementById("pj-dari").value, document.getElementById("pj-sampai").value);
+  };
+  veil.querySelector("#pj-dari").onchange = gambarDoc;
+  veil.querySelector("#pj-sampai").onchange = gambarDoc;
+  const tutup = () => { veil.remove(); document.removeEventListener("keydown", escLembar); };
+  veil.querySelector("#pj-tutup").onclick = tutup;
+  veil.querySelector("#pj-cetak").onclick = () => window.print();
+  veil.onclick = e => { if (e.target === veil) tutup(); };
+  function escLembar(e){ if (e.key === "Escape") tutup(); }
+  document.addEventListener("keydown", escLembar);
+  gambarDoc();
+}
+
+/* ============================================================
    10. Kendali antarmuka
    ============================================================ */
 function toast(teks, jenis){
@@ -1863,6 +2101,7 @@ document.getElementById("new-ev").onclick = () => bukaEditor(null, iso(state.anc
 document.getElementById("export").onclick = () => { tutupMenu(); eksporIcs(); };
 document.getElementById("room-chip").onclick = () => { tutupMenu(); bukaRuangDialog(); };
 document.getElementById("ai-key").onclick = () => { tutupMenu(); bukaKunciAi(); };
+document.getElementById("lembar-pj").onclick = () => { tutupMenu(); bukaLembarPJ(); };
 
 /* Menu tiga titik menampung yang jarang dipakai agar kop tetap bersih. */
 const tombolMenu = document.getElementById("menu-btn");
