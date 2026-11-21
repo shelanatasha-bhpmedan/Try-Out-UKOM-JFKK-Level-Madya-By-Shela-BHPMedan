@@ -744,12 +744,12 @@ function jadwalContoh(){
         "Monitoring dilaksanakan secara daring atas permintaan.",
         "",
         "Seksi Harta Peninggalan Wilayah II.",
-        "Catatan: jam selesai masih perkiraan karena surat menyebut \"s.d. selesai\". Perhatikan geladi bersih webinar pukul 15.00 di hari yang sama."
+        "Catatan: jam selesai masih perkiraan karena surat menyebut \"s.d. selesai\". Perhatikan gladi bersih webinar pukul 15.00 di hari yang sama."
       ].join("\n")
     },
     {
-      id:"bhp_20261123_geladi", date:"2026-11-23", start:"15:00", end:"16:30", tempat:"Daring — kanal webinar",
-      title:"Geladi bersih webinar",
+      id:"bhp_20261123_gladi", date:"2026-11-23", start:"15:00", end:"16:30", tempat:"Daring — kanal webinar",
+      title:"Gladi Bersih Webinar",
       cat:"fokus", priority:"tinggi", owner:"BHP Medan", attendees:[],
       notes:"Persiapan akhir webinar 24 November 2026: uji tayang materi, uji audio, pembagian peran moderator dan narasumber, serta penelusuran alur acara."
     },
@@ -757,7 +757,7 @@ function jadwalContoh(){
       id:"bhp_20261124_webinar", date:"2026-11-24", start:"09:00", end:"11:00", tempat:"Daring — webinar",
       title:"Webinar",
       cat:"rapat", priority:"tinggi", owner:"BHP Medan", attendees:[],
-      notes:"Jam masih perkiraan — belum ditentukan. Sesuaikan setelah rundown final.\n\nGeladi bersih dilaksanakan Senin, 23 November 2026 pukul 15.00."
+      notes:"Jam masih perkiraan — belum ditentukan. Sesuaikan setelah rundown final.\n\nGladi bersih dilaksanakan Senin, 23 November 2026 pukul 15.00."
     },
     {
       id:"bhp_20261125_helmina", date:"2026-11-25", start:"09:00", end:"10:00", tempat:"Kantor BHP Medan",
@@ -2187,6 +2187,14 @@ const cocokTautan = location.hash.match(/[#&]r=([^&]*)/);
 const ruangAwal = cocokTautan ? decodeURIComponent(cocokTautan[1]) : (bacaLokal("bhpkal.room", "") || "");
 
 muatData();
+
+/* Acara yang berganti id setelah perbaikan ejaan: buang yang lama supaya
+   tidak muncul kembar berdampingan dengan penggantinya. */
+const ID_USANG = ["bhp_20261123_geladi"];
+let adaUsang = false;
+ID_USANG.forEach(id => { if (store.events[id]){ delete store.events[id]; adaUsang = true; } });
+if (adaUsang){ simpanData(); terapkan(); }
+
 if (!ruangAwal){
   /* Agenda resmi yang belum pernah ada di perangkat ini ikut dimuat. Acara yang
      pernah dihapus meninggalkan nisan, jadi tidak pernah hidup lagi. */
